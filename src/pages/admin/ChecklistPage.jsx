@@ -103,8 +103,25 @@ const ChecklistPage = () => {
     }
   };
 
-  const exportarExcel = () => {
-    window.open(`${process.env.REACT_APP_API_URL}/asistencias/exportar/${registro.id}`, '_blank');
+  const exportarExcel = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get(`/asistencias/exportar/${registro.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `asistencia_${registro.fecha || registro.id}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Excel descargado');
+    } catch {
+      toast.error('Error al descargar el Excel');
+    }
   };
 
   const agregarNuevoNino = async () => {
