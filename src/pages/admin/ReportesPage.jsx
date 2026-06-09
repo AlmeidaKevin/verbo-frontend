@@ -27,9 +27,25 @@ const ReportesPage = () => {
     finally { setCargando(false); }
   };
 
-  const exportar = (registroId) => {
-    const token = localStorage.getItem('token');
-    window.open(`${process.env.REACT_APP_API_URL}/asistencias/exportar/${registroId}`, '_blank');
+  const exportar = async (registroId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get(`/asistencias/exportar/${registroId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `asistencia_${registroId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Excel descargado');
+    } catch {
+      toast.error('Error al descargar el Excel');
+    }
   };
 
   return (
