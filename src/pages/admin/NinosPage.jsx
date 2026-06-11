@@ -32,12 +32,15 @@ const NinosPage = () => {
       nombre_completo: nino.nombre_completo,
       edad: nino.edad || '',
       grupo_id: nino.grupo_id || '',
-    } : { nombre_completo: '', edad: '', grupo_id: '' });
+      numero_contacto: nino.numero_contacto || '',
+      observacion: nino.observacion || '',
+    } : { nombre_completo: '', edad: '', grupo_id: '', numero_contacto: '', observacion: '' });
     setModal(true);
   };
 
   const cerrar = () => { setModal(false); setEditando(null); };
 
+  
   const onSubmit = async (datos) => {
     setCargando(true);
     try {
@@ -45,6 +48,8 @@ const NinosPage = () => {
         nombre_completo: datos.nombre_completo.trim(),
         edad: datos.edad ? parseInt(datos.edad) : null,
         grupo_id: datos.grupo_id || null,
+        numero_contacto: datos.numero_contacto?.trim() || null,
+        observacion: datos.observacion?.trim() || null,
       };
       if (editando) {
         const { data } = await api.put(`/ninos/${editando.id}`, payload);
@@ -60,6 +65,8 @@ const NinosPage = () => {
       toast.error(err.response?.data?.message || 'Error al guardar');
     } finally { setCargando(false); }
   };
+
+  
 
   const eliminar = async (id) => {
     if (!window.confirm('¿Eliminar este niño del sistema?')) return;
