@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare,
-  FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw,
-  FiAlertCircle
-} from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid } from 'react-icons/fi';
+
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
