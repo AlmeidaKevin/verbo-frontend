@@ -4,6 +4,38 @@ import { FiPlus, FiEdit2, FiTrash2, FiClock, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
+const DescripcionTexto = ({ texto }) => {
+  const [expandido, setExpandido] = useState(false);
+  const LIMITE = 120;
+  const esCortable = texto.length > LIMITE || texto.includes('\n');
+  const primerSalto = texto.indexOf('\n');
+  const debeCortar = !expandido && esCortable && (
+    texto.length > LIMITE || (primerSalto !== -1 && primerSalto < LIMITE)
+  );
+
+  const textoVisible = debeCortar
+    ? texto.slice(0, Math.min(LIMITE, primerSalto !== -1 ? primerSalto : LIMITE))
+    : texto;
+
+  return (
+    <div className="mt-2">
+      <p className="text-gray-500 text-xs whitespace-pre-wrap leading-relaxed">
+        {textoVisible}
+        {debeCortar && '...'}
+      </p>
+      {esCortable && (
+        <button
+          onClick={() => setExpandido(p => !p)}
+          className="text-primary-600 text-xs font-medium mt-1 hover:underline"
+        >
+          {expandido ? 'Ver menos' : 'Ver más'}
+        </button>
+      )}
+    </div>
+  );
+};
+
+
 const ReunionesPage = () => {
   const [reuniones, setReuniones] = useState([]);
   const [modal, setModal] = useState(false);
@@ -89,7 +121,7 @@ const ReunionesPage = () => {
               </div>
               <h3 className="font-semibold text-gray-800 mb-1">{r.nombre}</h3>
               <p className="text-primary-600 font-medium text-sm">{r.hora_inicio} – {r.hora_fin}</p>
-              {r.descripcion && <p className="text-gray-500 text-xs mt-2">{r.descripcion}</p>}
+              {r.descripcion && <DescripcionTexto texto={r.descripcion} />}
               {r.grupos?.length > 0 && (
                 <p className="text-xs text-gray-400 mt-3">{r.grupos.length} grupo(s) asignado(s)</p>
               )}
