@@ -141,6 +141,19 @@ const ChecklistPage = () => {
       toast.error(err.response?.data?.message || 'Error al marcar');
     }
   };
+  
+  const desmarcarAsistencia = async (asistenciaId, ninoNombre) => {
+    if (!window.confirm(`¿Desmarcar a ${ninoNombre}? Se eliminará de la lista de asistentes.`)) return;
+    try {
+      await api.delete(`/asistencias/${asistenciaId}`);
+      setAsistencias(prev => prev.filter(a => a.id !== asistenciaId));
+      toast.success(`❌ ${ninoNombre} desmarcado`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al desmarcar');
+    }
+  };
+
+  
 
   const guardarComentario = async () => {
     if (!modalComentario) return;
@@ -436,17 +449,29 @@ const ChecklistPage = () => {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setModalComentario({
-                    id: a.id,
-                    nombre: a.nino?.nombre_completo,
-                    comentario: a.comentario || '',
-                    tarde: a.llego_tarde || false,
-                  })}
-                  className="p-2 text-gray-400 hover:text-primary-600 transition"
-                >
-                  <FiMessageSquare size={16} />
-                </button>
+                
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setModalComentario({
+                      id: a.id,
+                      nombre: a.nino?.nombre_completo,
+                      comentario: a.comentario || '',
+                      tarde: a.llego_tarde || false,
+                    })}
+                    className="p-2 text-gray-400 hover:text-primary-600 transition"
+                    title="Editar comentario"
+                  >
+                    <FiMessageSquare size={16} />
+                  </button>
+                  <button
+                    onClick={() => desmarcarAsistencia(a.id, a.nino?.nombre_completo)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition"
+                    title="Desmarcar asistencia"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </div>
+                
               </div>
             ))}
           </div>
