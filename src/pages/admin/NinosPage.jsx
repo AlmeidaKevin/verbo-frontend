@@ -362,3 +362,6 @@ const NinosPage = () => {
       )}
     </div>
   );
+};
+
+export default NinosPage;
