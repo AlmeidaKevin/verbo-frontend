@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiDownload, FiFilter, FiFileText, FiX } from 'react-icons/fi';
-import { SiMicrosoftexcel } from 'react-icons/si';
+import { FiDownload, FiFilter, FiFileText, FiX, FiGrid } from 'react-icons/fi';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -224,7 +223,7 @@ const ReportesPage = () => {
                 onClick={() => descargar(modalDescarga, 'xlsx')}
                 className="flex items-center gap-3 w-full bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 font-medium py-3 px-4 rounded-xl transition"
               >
-                <SiMicrosoftexcel size={22} />
+                <FiGrid size={22} />
                 <div className="text-left">
                   <p className="text-sm font-semibold">Excel (.xlsx)</p>
                   <p className="text-xs text-green-600">Hoja de cálculo editable</p>
