@@ -61,6 +61,7 @@ const ChecklistPage = () => {
           filter: `registro_id=eq.${registro.id}`,
         },
         async (payload) => {
+          console.log('Realtime event:', payload.eventType, payload);
           if (payload.eventType === 'INSERT') {
             // Evitar duplicados
             setAsistencias(prev => {
