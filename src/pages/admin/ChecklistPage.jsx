@@ -46,7 +46,6 @@ const ChecklistPage = () => {
     }
   }, [busqueda, todosNinos, asistencias]);
 
-
   useEffect(() => {
     if (!registro) return;
   
@@ -55,34 +54,39 @@ const ChecklistPage = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'asistencias',
           filter: `registro_id=eq.${registro.id}`,
         },
-        async (payload) => {
+        (payload) => {
           console.log('Realtime event:', payload.eventType, payload);
+  
           if (payload.eventType === 'INSERT') {
-            // Evitar duplicados
             setAsistencias(prev => {
               if (prev.find(a => a.id === payload.new.id)) return prev;
-              // Buscar el niño en todosNinos para armar el objeto completo
-              const nino = todosNinos.find(n => n.id === payload.new.nino_id);
-              const nuevaAsistencia = {
-                ...payload.new,
-                nino: nino ? { id: nino.id, nombre_completo: nino.nombre_completo } : null,
-              };
-              return [...prev, nuevaAsistencia].sort((a, b) => (a.orden_llegada || 0) - (b.orden_llegada || 0));
+              // Usar función que accede al estado más reciente de todosNinos
+              setTodosNinos(ninos => {
+                const nino = ninos.find(n => n.id === payload.new.nino_id);
+                const nuevaAsistencia = {
+                  ...payload.new,
+                  nino: nino ? { id: nino.id, nombre_completo: nino.nombre_completo } : { id: payload.new.nino_id, nombre_completo: '...' },
+                };
+                setAsistencias(current => {
+                  if (current.find(a => a.id === payload.new.id)) return current;
+                  return [...current, nuevaAsistencia].sort((a, b) => (a.orden_llegada || 0) - (b.orden_llegada || 0));
+                });
+                return ninos; // no cambiar todosNinos
+              });
+              return prev; // retorno temporal, el real está arriba
             });
           }
   
           if (payload.eventType === 'DELETE') {
-            // Alguien desmarcó un niño
             setAsistencias(prev => prev.filter(a => a.id !== payload.old.id));
           }
   
           if (payload.eventType === 'UPDATE') {
-            // Alguien editó comentario o tarde
             setAsistencias(prev =>
               prev.map(a => a.id === payload.new.id ? { ...a, ...payload.new } : a)
             );
@@ -93,7 +97,6 @@ const ChecklistPage = () => {
         console.log('Realtime status:', status);
       });
   
-    // Limpiar suscripción al salir
     return () => {
       supabase.removeChannel(canal);
     };
