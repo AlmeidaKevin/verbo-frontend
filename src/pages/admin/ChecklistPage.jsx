@@ -30,10 +30,22 @@ const ChecklistPage = () => {
   useEffect(() => { cargarReuniones(); }, []);
   useEffect(() => { if (reunionSel) cargarGrupos(reunionSel); else setGrupos([]); }, [reunionSel]);
   useEffect(() => {
-    const sinMarcar = todosNinos.filter(n => !asistencias.find(a => a.nino_id === n.id));
-    if (busqueda.trim()) setFiltrados(sinMarcar.filter(n => n.nombre_completo.toLowerCase().includes(busqueda.toLowerCase())));
-    else setFiltrados(sinMarcar);
+    const sinMarcar = todosNinos.filter(n =>
+      !asistencias.find(a => {
+        // Soportar ambas formas: a.nino_id o a.nino?.id
+        const id = a.nino_id || a.nino?.id;
+        return id === n.id;
+      })
+    );
+    if (busqueda.trim()) {
+      setFiltrados(sinMarcar.filter(n =>
+        n.nombre_completo.toLowerCase().includes(busqueda.toLowerCase())
+      ));
+    } else {
+      setFiltrados(sinMarcar);
+    }
   }, [busqueda, todosNinos, asistencias]);
+
 
   useEffect(() => {
     if (!registro) return;
@@ -50,13 +62,16 @@ const ChecklistPage = () => {
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            // Alguien marcó un niño — cargar datos completos del niño
-            const { data } = await api.get(`/ninos/${payload.new.nino_id}`).catch(() => ({ data: null }));
-            const nino = data?.nino;
+            // Evitar duplicados
             setAsistencias(prev => {
-              // Evitar duplicados
               if (prev.find(a => a.id === payload.new.id)) return prev;
-              return [...prev, { ...payload.new, nino }].sort((a, b) => a.orden_llegada - b.orden_llegada);
+              // Buscar el niño en todosNinos para armar el objeto completo
+              const nino = todosNinos.find(n => n.id === payload.new.nino_id);
+              const nuevaAsistencia = {
+                ...payload.new,
+                nino: nino ? { id: nino.id, nombre_completo: nino.nombre_completo } : null,
+              };
+              return [...prev, nuevaAsistencia].sort((a, b) => (a.orden_llegada || 0) - (b.orden_llegada || 0));
             });
           }
   
