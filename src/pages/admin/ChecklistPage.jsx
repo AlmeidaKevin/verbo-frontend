@@ -27,12 +27,20 @@ const ChecklistPage = () => {
   const [modalDescarga, setModalDescarga] = useState(false);
   const busquedaRef = useRef();
 
+  // Ref para acceder a todosNinos dentro del closure de realtime
+  const todosNinosRef = useRef([]);
+
+  // Mantener ref sincronizado con el estado
+  useEffect(() => {
+    todosNinosRef.current = todosNinos;
+  }, [todosNinos]);
+
   useEffect(() => { cargarReuniones(); }, []);
   useEffect(() => { if (reunionSel) cargarGrupos(reunionSel); else setGrupos([]); }, [reunionSel]);
+
   useEffect(() => {
     const sinMarcar = todosNinos.filter(n =>
       !asistencias.find(a => {
-        // Soportar ambas formas: a.nino_id o a.nino?.id
         const id = a.nino_id || a.nino?.id;
         return id === n.id;
       })
@@ -46,9 +54,10 @@ const ChecklistPage = () => {
     }
   }, [busqueda, todosNinos, asistencias]);
 
+  // Suscripción realtime
   useEffect(() => {
     if (!registro) return;
-  
+
     const canal = supabase
       .channel(`checklist-${registro.id}`)
       .on(
@@ -61,31 +70,25 @@ const ChecklistPage = () => {
         },
         (payload) => {
           console.log('Realtime event:', payload.eventType, payload);
-  
+
           if (payload.eventType === 'INSERT') {
+            const nino = todosNinosRef.current.find(n => n.id === payload.new.nino_id);
+            const nuevaAsistencia = {
+              ...payload.new,
+              nino: nino
+                ? { id: nino.id, nombre_completo: nino.nombre_completo }
+                : { id: payload.new.nino_id, nombre_completo: 'Cargando...' },
+            };
             setAsistencias(prev => {
               if (prev.find(a => a.id === payload.new.id)) return prev;
-              // Usar función que accede al estado más reciente de todosNinos
-              setTodosNinos(ninos => {
-                const nino = ninos.find(n => n.id === payload.new.nino_id);
-                const nuevaAsistencia = {
-                  ...payload.new,
-                  nino: nino ? { id: nino.id, nombre_completo: nino.nombre_completo } : { id: payload.new.nino_id, nombre_completo: '...' },
-                };
-                setAsistencias(current => {
-                  if (current.find(a => a.id === payload.new.id)) return current;
-                  return [...current, nuevaAsistencia].sort((a, b) => (a.orden_llegada || 0) - (b.orden_llegada || 0));
-                });
-                return ninos; // no cambiar todosNinos
-              });
-              return prev; // retorno temporal, el real está arriba
+              return [...prev, nuevaAsistencia].sort((a, b) => (a.orden_llegada || 0) - (b.orden_llegada || 0));
             });
           }
-  
+
           if (payload.eventType === 'DELETE') {
             setAsistencias(prev => prev.filter(a => a.id !== payload.old.id));
           }
-  
+
           if (payload.eventType === 'UPDATE') {
             setAsistencias(prev =>
               prev.map(a => a.id === payload.new.id ? { ...a, ...payload.new } : a)
@@ -96,7 +99,7 @@ const ChecklistPage = () => {
       .subscribe((status) => {
         console.log('Realtime status:', status);
       });
-  
+
     return () => {
       supabase.removeChannel(canal);
     };
@@ -149,7 +152,10 @@ const ChecklistPage = () => {
   const marcarAsistencia = async (nino) => {
     try {
       const { data } = await api.post('/asistencias/marcar', { registro_id: registro.id, nino_id: nino.id, llego_tarde: false });
-      setAsistencias(prev => [...prev, { ...data.asistencia, nino }]);
+      setAsistencias(prev => {
+        if (prev.find(a => a.id === data.asistencia.id)) return prev;
+        return [...prev, { ...data.asistencia, nino }];
+      });
       setBusqueda('');
       toast.success(`✅ ${nino.nombre_completo} marcado`);
     } catch (err) { toast.error(err.response?.data?.message || 'Error al marcar'); }
@@ -213,6 +219,7 @@ const ChecklistPage = () => {
     } catch (err) { toast.error(err.response?.data?.message || 'Error al agregar'); }
   };
 
+  // ── Pantalla 1: Seleccionar reunión y grupo ──────────────────
   if (!registro && !modoSelector) {
     return (
       <div className="max-w-lg mx-auto">
@@ -243,6 +250,7 @@ const ChecklistPage = () => {
     );
   }
 
+  // ── Pantalla 2: Selector de lista ────────────────────────────
   if (modoSelector) {
     const grupoInfo = grupos.find(g => g.id === grupoSel);
     const reunionInfo = reuniones.find(r => r.id === reunionSel);
@@ -278,6 +286,7 @@ const ChecklistPage = () => {
     );
   }
 
+  // ── Pantalla 3: Checklist activo ─────────────────────────────
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <div className="bg-primary-600 text-white rounded-2xl p-4">
@@ -385,7 +394,6 @@ const ChecklistPage = () => {
         </button>
       </div>
 
-      {/* Modal descarga */}
       {modalDescarga && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-xs p-6 shadow-2xl mx-4">
@@ -411,7 +419,6 @@ const ChecklistPage = () => {
         document.body
       )}
 
-      {/* Modal comentario */}
       {modalComentario && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl mx-4">
@@ -433,7 +440,6 @@ const ChecklistPage = () => {
         document.body
       )}
 
-      {/* Modal agregar niño */}
       {modalAgregar && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl mx-4">
