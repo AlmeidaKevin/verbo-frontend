@@ -88,7 +88,9 @@ const ChecklistPage = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
   
     // Limpiar suscripción al salir
     return () => {
