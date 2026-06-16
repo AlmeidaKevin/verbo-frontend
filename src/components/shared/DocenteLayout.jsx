@@ -3,128 +3,111 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { FiMenu, FiHome, FiGrid, FiCheckSquare, FiBookOpen, FiBell, FiUser, FiLogOut, FiBarChart2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
+// Colores hardcodeados por nombre — Tailwind purga las clases dinámicas
+const COLORES = {
+  indigo: {
+    bg800:      'bg-indigo-800',
+    bg400:      'bg-indigo-400',
+    borderB:    'border-b border-indigo-700',
+    borderT:    'border-t border-indigo-700',
+    text300:    'text-indigo-300',
+    text100:    'text-indigo-100',
+    text200:    'text-indigo-200',
+    hoverBg:    'hover:bg-indigo-700',
+    rolClass:   'rol-docente',
+  },
+  violet: {
+    bg800:      'bg-violet-800',
+    bg400:      'bg-violet-400',
+    borderB:    'border-b border-violet-700',
+    borderT:    'border-t border-violet-700',
+    text300:    'text-violet-300',
+    text100:    'text-violet-100',
+    text200:    'text-violet-200',
+    hoverBg:    'hover:bg-violet-700',
+    rolClass:   'rol-ayudante',
+  },
+};
+
 const buildLayout = (navItems, rolLabel, color) => {
+  const c = COLORES[color] || COLORES.indigo;
+
   return function Layout() {
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
-    const [abierto, setAbierto] = useState(false);      // mobile
-    const [colapsado, setColapsado] = useState(false);  // desktop
+    const [abierto, setAbierto] = useState(false);
+    const [colapsado, setColapsado] = useState(false);
 
     const handleLogout = () => { logout(); navigate('/login'); };
 
-    // Sidebar mobile (siempre expandido)
-    const SidebarMobile = () => (
-      <div className={`flex flex-col h-full bg-${color}-800`}>
-        <div className={`p-6 border-b border-${color}-700`}>
-          <div className="flex items-center gap-3">
-            <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
-            <div>
-              <p className="text-white font-bold text-sm">Verbo Mañosca</p>
-              <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
-            </div>
+    const Avatar = () => (
+      usuario?.foto_url
+        ? <img src={usuario.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+        : <div className={`w-8 h-8 rounded-full ${c.bg400} flex items-center justify-center text-white text-xs font-bold`}>
+            {usuario?.nombre_completo?.[0]}
           </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} onClick={() => setAbierto(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${isActive ? 'bg-white text-primary-600' : `text-${color}-100 hover:bg-${color}-700`}`
-              }
-            >
-              <Icon size={18} /> {label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className={`p-4 border-t border-${color}-700`}>
-          <div className="flex items-center gap-3 mb-3">
-            {usuario?.foto_url
-              ? <img src={usuario.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-              : <div className={`w-8 h-8 rounded-full bg-${color}-400 flex items-center justify-center text-white text-xs font-bold`}>{usuario?.nombre_completo?.[0]}</div>
-            }
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">{usuario?.nombre_completo}</p>
-              <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
-            </div>
-          </div>
-          <button onClick={handleLogout} className={`w-full flex items-center gap-2 text-${color}-200 hover:text-white text-sm py-2 px-3 rounded-lg hover:bg-${color}-700 transition`}>
-            <FiLogOut size={16} /> Cerrar sesión
-          </button>
+    );
+
+    const LogoHeader = () => (
+      <div className="flex items-center gap-3">
+        <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
+        <div>
+          <p className="text-white font-bold text-sm">Verbo Mañosca</p>
+          <p className={`${c.text300} text-xs`}>{rolLabel}</p>
         </div>
       </div>
     );
-    
-    const rolClass = color === 'indigo' ? 'rol-docente' : color === 'violet' ? 'rol-ayudante' : '';
+
     return (
-      <div className={`flex h-screen bg-gray-50 ${rolClass}`}>
-        {/* ── Sidebar DESKTOP ───────────────────────────────────── */}
-        <aside
-          className={`hidden lg:flex flex-col bg-${color}-800 min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}
-        >
-          {/* Logo / botón colapsar */}
-          <div className={`border-b border-${color}-700 flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
-            {!colapsado && (
-              <div className="flex items-center gap-3">
-                <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
-                <div>
-                  <p className="text-white font-bold text-sm">Verbo Mañosca</p>
-                  <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
-                </div>
-              </div>
-            )}
-            {colapsado && <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />}
-            <button
-              onClick={() => setColapsado(p => !p)}
-              className={`text-${color}-300 hover:text-white hover:bg-${color}-700 rounded-lg p-1.5 transition`}
-              title={colapsado ? 'Expandir menú' : 'Colapsar menú'}
-            >
+      <div className={`flex h-screen bg-gray-50 ${c.rolClass}`}>
+
+        {/* ── Sidebar DESKTOP ─────────────────────────────────── */}
+        <aside className={`hidden lg:flex flex-col ${c.bg800} min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}>
+
+          <div className={`${c.borderB} flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
+            {!colapsado && <LogoHeader />}
+            {colapsado && <img src="/favicon_verbo.png" alt="Logo" className="w-9 h-9 rounded-full object-cover" />}
+            <button onClick={() => setColapsado(p => !p)}
+              className={`${c.text300} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}
+              title={colapsado ? 'Expandir menú' : 'Colapsar menú'}>
               {colapsado ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
             </button>
           </div>
 
-          {/* Nav */}
           <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-2">
             {navItems.map(({ to, icon: Icon, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                title={colapsado ? label : undefined}
+              <NavLink key={to} to={to} title={colapsado ? label : undefined}
                 className={({ isActive }) =>
                   `flex items-center rounded-xl text-sm font-medium transition
-                  ${colapsado ? 'justify-center px-0 py-3' : `gap-3 px-4 py-3`}
-                  ${isActive ? 'bg-white text-primary-600' : `text-${color}-100 hover:bg-${color}-700`}`
-                }
-              >
+                  ${colapsado ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}
+                  ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
+                }>
                 <Icon size={18} className="shrink-0" />
                 {!colapsado && <span>{label}</span>}
               </NavLink>
             ))}
           </nav>
 
-          {/* Footer usuario */}
-          <div className={`border-t border-${color}-700 ${colapsado ? 'py-4 px-2' : 'p-4'}`}>
+          <div className={`${c.borderT} ${colapsado ? 'py-4 px-2' : 'p-4'}`}>
             {colapsado ? (
               <div className="flex flex-col items-center gap-3">
-                {usuario?.foto_url
-                  ? <img src={usuario.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  : <div className={`w-8 h-8 rounded-full bg-${color}-400 flex items-center justify-center text-white text-xs font-bold`}>{usuario?.nombre_completo?.[0]}</div>
-                }
-                <button onClick={handleLogout} title="Cerrar sesión" className={`text-${color}-200 hover:text-white hover:bg-${color}-700 rounded-lg p-1.5 transition`}>
+                <Avatar />
+                <button onClick={handleLogout} title="Cerrar sesión"
+                  className={`${c.text200} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}>
                   <FiLogOut size={16} />
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-3 mb-3">
-                  {usuario?.foto_url
-                    ? <img src={usuario.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                    : <div className={`w-8 h-8 rounded-full bg-${color}-400 flex items-center justify-center text-white text-xs font-bold`}>{usuario?.nombre_completo?.[0]}</div>
-                  }
+                  <Avatar />
                   <div className="overflow-hidden">
                     <p className="text-white text-xs font-medium truncate">{usuario?.nombre_completo}</p>
-                    <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
+                    <p className={`${c.text300} text-xs`}>{rolLabel}</p>
                   </div>
                 </div>
-                <button onClick={handleLogout} className={`w-full flex items-center gap-2 text-${color}-200 hover:text-white text-sm py-2 px-3 rounded-lg hover:bg-${color}-700 transition`}>
+                <button onClick={handleLogout}
+                  className={`w-full flex items-center gap-2 ${c.text200} hover:text-white text-sm py-2 px-3 rounded-lg ${c.hoverBg} transition`}>
                   <FiLogOut size={16} /> Cerrar sesión
                 </button>
               </>
@@ -132,15 +115,41 @@ const buildLayout = (navItems, rolLabel, color) => {
           </div>
         </aside>
 
-        {/* ── Sidebar MOBILE overlay ─────────────────────────────── */}
+        {/* ── Sidebar MOBILE overlay ───────────────────────────── */}
         {abierto && (
           <div className="lg:hidden fixed inset-0 z-50 flex">
-            <div className="w-64 flex flex-col"><SidebarMobile /></div>
+            <div className={`w-64 flex flex-col ${c.bg800}`}>
+              <div className={`p-5 ${c.borderB}`}><LogoHeader /></div>
+              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                {navItems.map(({ to, icon: Icon, label }) => (
+                  <NavLink key={to} to={to} onClick={() => setAbierto(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
+                      ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
+                    }>
+                    <Icon size={18} /> {label}
+                  </NavLink>
+                ))}
+              </nav>
+              <div className={`p-4 ${c.borderT}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar />
+                  <div className="overflow-hidden">
+                    <p className="text-white text-xs font-medium truncate">{usuario?.nombre_completo}</p>
+                    <p className={`${c.text300} text-xs`}>{rolLabel}</p>
+                  </div>
+                </div>
+                <button onClick={handleLogout}
+                  className={`w-full flex items-center gap-2 ${c.text200} hover:text-white text-sm py-2 px-3 rounded-lg ${c.hoverBg} transition`}>
+                  <FiLogOut size={16} /> Cerrar sesión
+                </button>
+              </div>
+            </div>
             <div className="flex-1 bg-black/50" onClick={() => setAbierto(false)} />
           </div>
         )}
 
-        {/* ── Main ───────────────────────────────────────────────── */}
+        {/* ── Main ─────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:justify-end">
             <button onClick={() => setAbierto(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100">
@@ -161,19 +170,19 @@ const buildLayout = (navItems, rolLabel, color) => {
 };
 
 export const DocenteLayout = buildLayout([
-  { to: '/docente/dashboard', icon: FiHome, label: 'Dashboard' },
-  { to: '/docente/grupos', icon: FiGrid, label: 'Mis Grupos' },
-  { to: '/docente/checklist', icon: FiCheckSquare, label: 'Checklist' },
-  { to: '/docente/tareas', icon: FiBookOpen, label: 'Tareas' },
-  { to: '/docente/reportes', icon: FiBarChart2, label: 'Reportes' },
-  { to: '/docente/publicaciones', icon: FiBell, label: 'Publicaciones' },
-  { to: '/docente/perfil', icon: FiUser, label: 'Mi Perfil' },
+  { to: '/docente/dashboard',     icon: FiHome,        label: 'Dashboard' },
+  { to: '/docente/grupos',        icon: FiGrid,        label: 'Mis Grupos' },
+  { to: '/docente/checklist',     icon: FiCheckSquare, label: 'Checklist' },
+  { to: '/docente/tareas',        icon: FiBookOpen,    label: 'Tareas' },
+  { to: '/docente/reportes',      icon: FiBarChart2,   label: 'Reportes' },
+  { to: '/docente/publicaciones', icon: FiBell,        label: 'Publicaciones' },
+  { to: '/docente/perfil',        icon: FiUser,        label: 'Mi Perfil' },
 ], 'Docente / Líder', 'indigo');
 
 export const AyudanteLayout = buildLayout([
-  { to: '/ayudante/dashboard', icon: FiHome, label: 'Dashboard' },
+  { to: '/ayudante/dashboard', icon: FiHome,        label: 'Dashboard' },
   { to: '/ayudante/checklist', icon: FiCheckSquare, label: 'Checklist' },
-  { to: '/ayudante/perfil', icon: FiUser, label: 'Mi Perfil' },
+  { to: '/ayudante/perfil',    icon: FiUser,        label: 'Mi Perfil' },
 ], 'Ayudante', 'violet');
 
 export default DocenteLayout;
