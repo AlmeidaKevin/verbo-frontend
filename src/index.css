@@ -8,13 +8,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Variables de color por rol ─────────────────────────── */
+:root {
+  --p50:  #EEF4F6; --p100: #D5E6EB; --p200: #ABCDD7;
+  --p300: #7AAFC0; --p400: #4F91A9; --p500: #2E7390;
+  --p600: #1F4E5F; --p700: #183D4A; --p800: #112C36; --p900: #0A1B21;
+}
+.rol-docente {
+  --p50:  #eef2ff; --p100: #e0e7ff; --p200: #c7d2fe;
+  --p300: #a5b4fc; --p400: #818cf8; --p500: #6366f1;
+  --p600: #3730a3; --p700: #312e81; --p800: #1e1b72; --p900: #13116b;
+}
+.rol-ayudante {
+  --p50:  #f5f3ff; --p100: #ede9fe; --p200: #ddd6fe;
+  --p300: #c4b5fd; --p400: #a78bfa; --p500: #8b5cf6;
+  --p600: #6d28d9; --p700: #5b21b6; --p800: #4c1d95; --p900: #3b0764;
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-/* Truncate multi-line */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
