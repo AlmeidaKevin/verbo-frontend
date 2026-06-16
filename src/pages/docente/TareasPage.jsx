@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiTrash2, FiEdit2, FiCpu, FiChevronRight, FiPaperclip, FiX, FiLoader } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit2, FiCpu, FiChevronRight, FiPaperclip, FiX, FiLoader, FiBookOpen } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -13,7 +14,6 @@ const TareasPage = () => {
   const [archivos, setArchivos] = useState([]);
   const [cargando, setCargando] = useState(false);
 
-  // IA
   const [descIA, setDescIA] = useState('');
   const [iaActiva, setIaActiva] = useState(false);
   const [iaCargando, setIaCargando] = useState(false);
@@ -27,11 +27,7 @@ const TareasPage = () => {
   const cargarDatos = async () => {
     setCargando(true);
     try {
-      const [tRes, rRes, gRes] = await Promise.all([
-        api.get('/tareas'),
-        api.get('/reuniones'),
-        api.get('/grupos'),
-      ]);
+      const [tRes, rRes, gRes] = await Promise.all([api.get('/tareas'), api.get('/reuniones'), api.get('/grupos')]);
       setTareas(tRes.data.tareas || []);
       setReuniones(rRes.data.reuniones || []);
       setGrupos(gRes.data.grupos || []);
@@ -50,9 +46,7 @@ const TareasPage = () => {
       setValue('descripcion', tarea.descripcion);
       setValue('reunion_id', tarea.reunion_id || '');
       setValue('grupo_id', tarea.grupo_id || '');
-    } else {
-      reset();
-    }
+    } else { reset(); }
     setModal(true);
   };
 
@@ -115,17 +109,14 @@ const TareasPage = () => {
       setIaResultado(data);
       setValue('titulo', data.titulo);
       setValue('descripcion', data.descripcion);
-    } catch (err) {
-      toast.error('Error al generar siguiente opción');
-    } finally { setIaCargando(false); }
+    } catch { toast.error('Error al generar siguiente opción'); }
+    finally { setIaCargando(false); }
   };
 
   const handleArchivos = (e) => {
     const files = Array.from(e.target.files);
-    const total = archivos.length + files.length;
-    if (total > 3) return toast.error('Máximo 3 archivos');
-    const grandes = files.filter(f => f.size > 5 * 1024 * 1024);
-    if (grandes.length > 0) return toast.error('Cada archivo debe ser menor a 5MB');
+    if (archivos.length + files.length > 3) return toast.error('Máximo 3 archivos');
+    if (files.some(f => f.size > 5 * 1024 * 1024)) return toast.error('Cada archivo debe ser menor a 5MB');
     setArchivos(prev => [...prev, ...files]);
   };
 
@@ -139,7 +130,6 @@ const TareasPage = () => {
         </button>
       </div>
 
-      {/* Lista de tareas */}
       {cargando && !modal ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
       ) : tareas.length === 0 ? (
@@ -191,36 +181,27 @@ const TareasPage = () => {
         </div>
       )}
 
-      {/* Modal crear/editar */}
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl">
-            {/* Header modal */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+      {modal && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="font-bold text-gray-800">{editando ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
               <button onClick={cerrarModal} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition"><FiX /></button>
             </div>
-
             <div className="p-6 space-y-5">
-              {/* Sección IA */}
               {!editando && (
                 <div className="border border-purple-200 bg-purple-50 rounded-xl p-4">
                   <button onClick={() => setIaActiva(!iaActiva)}
                     className="flex items-center gap-2 text-purple-700 font-medium text-sm w-full">
-                    <FiCpu size={16} />
-                    Generar tarea con IA (HuggingFace)
+                    <FiCpu size={16} /> Generar tarea con IA (HuggingFace)
                     <FiChevronRight size={14} className={`ml-auto transition-transform ${iaActiva ? 'rotate-90' : ''}`} />
                   </button>
                   {iaActiva && (
                     <div className="mt-3 space-y-3">
                       <p className="text-xs text-purple-600">Describe brevemente qué tipo de tarea o deber quieres y la IA generará el título y descripción.</p>
-                      <textarea
-                        value={descIA}
-                        onChange={e => setDescIA(e.target.value)}
+                      <textarea value={descIA} onChange={e => setDescIA(e.target.value)}
                         placeholder="Ej: Una tarea sobre la historia de David y Goliat para niños de 6 años..."
-                        rows={2}
-                        className="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
-                      />
+                        rows={2} className="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400" />
                       <div className="flex gap-2">
                         <button onClick={generarConIA} disabled={iaCargando}
                           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition disabled:opacity-60">
@@ -234,66 +215,45 @@ const TareasPage = () => {
                           </button>
                         )}
                       </div>
-                      {iaResultado && (
-                        <p className="text-xs text-purple-500">✨ Tarea generada por IA — puedes editarla antes de publicar</p>
-                      )}
+                      {iaResultado && <p className="text-xs text-purple-500">✨ Tarea generada por IA — puedes editarla antes de publicar</p>}
                     </div>
                   )}
                 </div>
               )}
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Título */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                  <input
-                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.titulo ? 'border-red-400' : 'border-gray-300'}`}
-                    placeholder="Título de la tarea"
-                    {...register('titulo', { required: 'El título es requerido' })}
-                  />
+                  <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.titulo ? 'border-red-400' : 'border-gray-300'}`}
+                    placeholder="Título de la tarea" {...register('titulo', { required: 'El título es requerido' })} />
                   {errors.titulo && <p className="text-red-500 text-xs mt-1">{errors.titulo.message}</p>}
                 </div>
-
-                {/* Descripción */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
-                  <textarea
-                    rows={4}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.descripcion ? 'border-red-400' : 'border-gray-300'}`}
-                    placeholder="Descripción detallada de la tarea..."
-                    {...register('descripcion', { required: 'La descripción es requerida' })}
-                  />
+                  <textarea rows={4} className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.descripcion ? 'border-red-400' : 'border-gray-300'}`}
+                    placeholder="Descripción detallada de la tarea..." {...register('descripcion', { required: 'La descripción es requerida' })} />
                   {errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>}
                 </div>
-
-                {/* Reunión y Grupo */}
                 {!editando && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Reunión</label>
-                      <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        {...register('reunion_id')}>
+                      <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" {...register('reunion_id')}>
                         <option value="">Todas las reuniones</option>
                         {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
-                      <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        {...register('grupo_id')}>
+                      <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" {...register('grupo_id')}>
                         <option value="">Todos los grupos</option>
                         {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
                       </select>
                     </div>
                   </div>
                 )}
-
-                {/* Archivos */}
                 {!editando && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Archivos / Imágenes <span className="text-gray-400 font-normal">(máx. 3 archivos de 5MB)</span>
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Archivos / Imágenes <span className="text-gray-400 font-normal">(máx. 3 archivos de 5MB)</span></label>
                     <label className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-primary-400 transition">
                       <FiPaperclip className="text-gray-400" />
                       <span className="text-sm text-gray-500">Seleccionar archivos...</span>
@@ -305,34 +265,27 @@ const TareasPage = () => {
                           <div key={i} className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-lg">
                             <FiPaperclip size={11} />
                             <span className="truncate max-w-[120px]">{f.name}</span>
-                            <button type="button" onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))} className="ml-1 text-gray-400 hover:text-red-500">
-                              <FiX size={12} />
-                            </button>
+                            <button type="button" onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))} className="ml-1 text-gray-400 hover:text-red-500"><FiX size={12} /></button>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
-
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={cerrarModal} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
-                    Cancelar
-                  </button>
-                  <button type="submit" disabled={cargando}
-                    className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
+                  <button type="button" onClick={cerrarModal} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
+                  <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
                     {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Publicar Tarea'}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 };
 
-// Fix: missing import for FiBookOpen
-import { FiBookOpen } from 'react-icons/fi';
 export default TareasPage;
