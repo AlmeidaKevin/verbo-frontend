@@ -17,10 +17,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('usuario');
-      window.location.href = '/login';
+      const rutaActual = window.location.pathname;
+    
+      // solo redirigir si no estamos en página pública
+      if (rutaActual !== '/') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        window.location.href = '/login';
+      }
     }
+    
     return Promise.reject(error);
   }
 );
