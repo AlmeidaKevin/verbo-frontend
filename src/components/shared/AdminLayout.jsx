@@ -83,7 +83,7 @@ const AdminLayout = () => {
           <button onClick={() => setAbierto(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100">
             <FiMenu size={22} />
           </button>
-          <div className="text-right">
+          <div className="text-center ml-auto">
             <p className="text-sm font-medium text-gray-700">Panel Administrador</p>
             <p className="text-xs text-gray-400">{usuario?.nombre_completo}</p>
           </div>
