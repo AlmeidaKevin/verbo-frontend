@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSearch, FiEye } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
-// Componente para mostrar observación con "Ver más"
 const ObservacionTexto = ({ texto }) => {
   const [expandido, setExpandido] = useState(false);
   const LIMITE = 100;
   const esCortable = texto.length > LIMITE || texto.includes('\n');
   const primerSalto = texto.indexOf('\n');
-  const debeCortar = !expandido && esCortable && (
-    texto.length > LIMITE || (primerSalto !== -1 && primerSalto < LIMITE)
-  );
-  const textoVisible = debeCortar
-    ? texto.slice(0, Math.min(LIMITE, primerSalto !== -1 ? primerSalto : LIMITE))
-    : texto;
-
+  const debeCortar = !expandido && esCortable && (texto.length > LIMITE || (primerSalto !== -1 && primerSalto < LIMITE));
+  const textoVisible = debeCortar ? texto.slice(0, Math.min(LIMITE, primerSalto !== -1 ? primerSalto : LIMITE)) : texto;
   return (
     <div>
-      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-        {textoVisible}{debeCortar && '...'}
-      </p>
+      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{textoVisible}{debeCortar && '...'}</p>
       {esCortable && (
-        <button
-          onClick={() => setExpandido(p => !p)}
-          className="text-primary-600 text-xs font-medium mt-1 hover:underline"
-        >
+        <button onClick={() => setExpandido(p => !p)} className="text-primary-600 text-xs font-medium mt-1 hover:underline">
           {expandido ? 'Ver menos' : 'Ver más'}
         </button>
       )}
@@ -41,7 +31,7 @@ const NinosPage = () => {
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
-  const [modalObservacion, setModalObservacion] = useState(null); // { nombre, observacion }
+  const [modalObservacion, setModalObservacion] = useState(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -60,11 +50,8 @@ const NinosPage = () => {
   const abrirModal = (nino = null) => {
     setEditando(nino);
     reset(nino ? {
-      nombre_completo: nino.nombre_completo,
-      edad: nino.edad || '',
-      grupo_id: nino.grupo_id || '',
-      numero_contacto: nino.numero_contacto || '',
-      observacion: nino.observacion || '',
+      nombre_completo: nino.nombre_completo, edad: nino.edad || '', grupo_id: nino.grupo_id || '',
+      numero_contacto: nino.numero_contacto || '', observacion: nino.observacion || '',
     } : { nombre_completo: '', edad: '', grupo_id: '', numero_contacto: '', observacion: '' });
     setModal(true);
   };
@@ -105,41 +92,30 @@ const NinosPage = () => {
     } catch { toast.error('Error al eliminar'); }
   };
 
-  const filtrados = ninos.filter(n =>
-    n.nombre_completo.toLowerCase().includes(buscar.toLowerCase())
-  );
+  const filtrados = ninos.filter(n => n.nombre_completo.toLowerCase().includes(buscar.toLowerCase()));
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Niños</h1>
-        <button
-          onClick={() => abrirModal()}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition w-fit"
-        >
+        <button onClick={() => abrirModal()}
+          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition w-fit">
           <FiPlus size={18} /> Registrar Niño
         </button>
       </div>
 
       <div className="relative">
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-        <input
-          value={buscar}
-          onChange={(e) => setBuscar(e.target.value)}
-          placeholder="Buscar niño por nombre..."
-          className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
+        <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar niño por nombre..."
+          className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
           <span className="text-sm font-medium text-gray-600">Total: {filtrados.length} niños</span>
         </div>
-
         {cargando ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
-          </div>
+          <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
         ) : filtrados.length === 0 ? (
           <p className="text-center text-gray-400 py-10">No se encontraron niños</p>
         ) : (
@@ -147,46 +123,25 @@ const NinosPage = () => {
             {filtrados.map((n, i) => (
               <div key={n.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition">
                 <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-bold">
-                    {i + 1}
-                  </span>
+                  <span className="w-7 h-7 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
                   <div>
                     <p className="text-sm font-medium text-gray-800">{n.nombre_completo}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       {n.edad && <span className="text-xs text-gray-400">{n.edad} años</span>}
-                      {n.grupo && (
-                        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                          {n.grupo.nombre}
-                        </span>
-                      )}
-                      {n.numero_contacto && (
-                        <span className="text-xs text-gray-400">📞 {n.numero_contacto}</span>
-                      )}
+                      {n.grupo && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{n.grupo.nombre}</span>}
+                      {n.numero_contacto && <span className="text-xs text-gray-400">📞 {n.numero_contacto}</span>}
                       {n.observacion && (
-                        <button
-                          onClick={() => setModalObservacion({ nombre: n.nombre_completo, observacion: n.observacion })}
-                          className="flex items-center gap-1 text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-full hover:bg-yellow-100 transition"
-                        >
+                        <button onClick={() => setModalObservacion({ nombre: n.nombre_completo, observacion: n.observacion })}
+                          className="flex items-center gap-1 text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-full hover:bg-yellow-100 transition">
                           <FiEye size={10} /> Ver nota
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
-
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => abrirModal(n)}
-                    className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
-                  >
-                    <FiEdit2 size={14} />
-                  </button>
-                  <button
-                    onClick={() => eliminar(n.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                  >
-                    <FiTrash2 size={14} />
-                  </button>
+                  <button onClick={() => abrirModal(n)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"><FiEdit2 size={14} /></button>
+                  <button onClick={() => eliminar(n.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={14} /></button>
                 </div>
               </div>
             ))}
@@ -195,150 +150,78 @@ const NinosPage = () => {
       </div>
 
       {/* Modal observación */}
-      {modalObservacion && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
+      {modalObservacion && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div>
                 <h3 className="font-bold text-gray-800">Observación</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{modalObservacion.nombre}</p>
               </div>
-              <button
-                onClick={() => setModalObservacion(null)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"
-              >
-                <FiX />
-              </button>
+              <button onClick={() => setModalObservacion(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
-            <div className="p-5">
-              <ObservacionTexto texto={modalObservacion.observacion} />
-            </div>
+            <div className="p-5"><ObservacionTexto texto={modalObservacion.observacion} /></div>
             <div className="px-5 pb-5">
-              <button
-                onClick={() => setModalObservacion(null)}
-                className="w-full py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition"
-              >
-                Cerrar
-              </button>
+              <button onClick={() => setModalObservacion(null)} className="w-full py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cerrar</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal crear/editar */}
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">
-                {editando ? 'Editar Niño' : 'Registrar Niño'}
-              </h2>
-              <button
-                onClick={cerrar}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"
-              >
-                <FiX />
-              </button>
+      {modal && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="font-bold text-gray-800">{editando ? 'Editar Niño' : 'Registrar Niño'}</h2>
+              <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
-
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
-                <input
-                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre_completo ? 'border-red-400' : 'border-gray-300'}`}
+                <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre_completo ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Nombre y apellido del niño"
-                  {...register('nombre_completo', {
-                    required: 'El nombre es requerido',
-                    validate: (v) =>
-                      /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) ||
-                      'Solo se permiten letras en el nombre',
-                  })}
-                />
-                {errors.nombre_completo && (
-                  <p className="text-red-500 text-xs mt-1">{errors.nombre_completo.message}</p>
-                )}
+                  {...register('nombre_completo', { required: 'El nombre es requerido', validate: v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras en el nombre' })} />
+                {errors.nombre_completo && <p className="text-red-500 text-xs mt-1">{errors.nombre_completo.message}</p>}
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Edad</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={17}
+                <input type="number" min={0} max={17}
                   className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.edad ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Ej: 7"
-                  {...register('edad', {
-                    validate: (v) =>
-                      !v ||
-                      (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 17) ||
-                      'Edad inválida (0-17)',
-                  })}
-                />
+                  {...register('edad', { validate: v => !v || (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 17) || 'Edad inválida (0-17)' })} />
                 {errors.edad && <p className="text-red-500 text-xs mt-1">{errors.edad.message}</p>}
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Grupo asignado</label>
-                <select
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  {...register('grupo_id')}
-                >
+                <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" {...register('grupo_id')}>
                   <option value="">Sin grupo asignado</option>
-                  {grupos.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.nombre} ({g.edad_min}–{g.edad_max} años)
-                    </option>
-                  ))}
+                  {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.edad_min}–{g.edad_max} años)</option>)}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número de contacto *</label>
-                <input
-                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.numero_contacto ? 'border-red-400' : 'border-gray-300'}`}
+                <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.numero_contacto ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Ej: 0991234567"
-                  {...register('numero_contacto', {
-                    required: 'El número de contacto es requerido',
-                    pattern: { value: /^\d+$/, message: 'Solo se permiten números' },
-                    minLength: { value: 7, message: 'Mínimo 7 dígitos' },
-                  })}
-                />
-                {errors.numero_contacto && (
-                  <p className="text-red-500 text-xs mt-1">{errors.numero_contacto.message}</p>
-                )}
+                  {...register('numero_contacto', { required: 'El número de contacto es requerido', pattern: { value: /^\d+$/, message: 'Solo se permiten números' }, minLength: { value: 7, message: 'Mínimo 7 dígitos' } })} />
+                {errors.numero_contacto && <p className="text-red-500 text-xs mt-1">{errors.numero_contacto.message}</p>}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observación <span className="text-gray-400 font-normal">(opcional)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Alergias, condiciones especiales, etc."
-                  {...register('observacion')}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Observación <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <textarea rows={3} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Alergias, condiciones especiales, etc." {...register('observacion')} />
               </div>
-
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={cerrar}
-                  className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={cargando}
-                  className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60"
-                >
+                <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
+                <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
                   {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Registrar'}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
