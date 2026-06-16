@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FiDownload, FiFilter, FiFileText, FiX, FiGrid } from 'react-icons/fi';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
+
 
 const ReportesPage = () => {
   const [registros, setRegistros] = useState([]);
@@ -125,40 +127,35 @@ const ReportesPage = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['Fecha', 'Reunión', 'Grupo', 'Rango edad', 'Primer ingreso', 'Último ingreso', 'Estado', 'Acciones'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  {['Fecha', 'Registrado por', 'Reunión', 'Grupo', 'Rango edad', 'Primer ingreso', 'Último ingreso', 'Estado', 'Acciones'].map(h => (
+                    <th key={h} className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {registros.map(r => (
                   <tr key={r.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 text-gray-700 font-medium">{r.fecha}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.reunion?.nombre}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.grupo?.nombre}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-center text-gray-700 font-medium">{r.fecha}</td>
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">{r.registrado_por?.nombre_completo || '—'}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">{r.reunion?.nombre}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">{r.grupo?.nombre}</td>
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
                       {r.grupo?.edad_min !== undefined ? `${r.grupo.edad_min}–${r.grupo.edad_max} años` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {r.hora_primer_visto
-                        ? new Date(r.hora_primer_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
-                        : '—'}
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
+                      {r.hora_primer_visto ? new Date(r.hora_primer_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {r.hora_ultimo_visto
-                        ? new Date(r.hora_ultimo_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
-                        : '—'}
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
+                      {r.hora_ultimo_visto ? new Date(r.hora_ultimo_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${r.guardado_at ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {r.guardado_at ? 'Guardado' : 'Pendiente'}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setModalDescarga(r.id)}
-                        className="flex items-center gap-1 text-xs bg-primary-50 text-primary-700 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition"
-                      >
+                    <td className="px-4 py-3 text-center">
+                      <button onClick={() => setModalDescarga(r.id)}
+                        className="inline-flex items-center gap-1 text-xs bg-primary-50 text-primary-700 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition">
                         <FiDownload size={12} /> Descargar
                       </button>
                     </td>
@@ -205,8 +202,8 @@ const ReportesPage = () => {
       )}
 
       {/* Modal selección de formato */}
-      {modalDescarga && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {modalDescarga && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-xs p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-800">Descargar reporte</h3>
@@ -241,7 +238,8 @@ const ReportesPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
