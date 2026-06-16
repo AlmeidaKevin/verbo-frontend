@@ -32,7 +32,7 @@ const LoginPage = () => {
         {/* Logo / Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">✝️</span>
+            <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Escuela Dominical</h1>
           <p className="text-gray-500 text-sm mt-1">Iglesia Verbo Mañosca</p>
