@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiEye, FiEyeOff, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -36,14 +37,7 @@ const UsuariosPage = () => {
     setEditando(usuario);
     setVerPass(false);
     if (usuario) {
-      reset({
-        nombre_completo: usuario.nombre_completo,
-        cedula: usuario.cedula,
-        email: usuario.email,
-        telefono: usuario.telefono,
-        rol: usuario.rol,
-        password: '',
-      });
+      reset({ nombre_completo: usuario.nombre_completo, cedula: usuario.cedula, email: usuario.email, telefono: usuario.telefono, rol: usuario.rol, password: '' });
     } else {
       reset({ nombre_completo: '', cedula: '', email: '', telefono: '', rol: 'docente', password: '' });
     }
@@ -56,13 +50,7 @@ const UsuariosPage = () => {
     setCargando(true);
     try {
       if (editando) {
-        const payload = {
-          nombre_completo: datos.nombre_completo,
-          cedula: datos.cedula,
-          email: datos.email,
-          telefono: datos.telefono,
-          rol: datos.rol,
-        };
+        const payload = { nombre_completo: datos.nombre_completo, cedula: datos.cedula, email: datos.email, telefono: datos.telefono, rol: datos.rol };
         const { data } = await api.put(`/usuarios/${editando.id}`, payload);
         setUsuarios(prev => prev.map(u => u.id === editando.id ? data.usuario : u));
         toast.success('Usuario actualizado');
@@ -87,24 +75,17 @@ const UsuariosPage = () => {
 
   const usuariosFiltrados = usuarios.filter(u => {
     const matchBusqueda = u.nombre_completo.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.email.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.cedula.includes(filtro);
+      u.email.toLowerCase().includes(filtro.toLowerCase()) || u.cedula.includes(filtro);
     const matchRol = rolFiltro ? u.rol === rolFiltro : true;
     return matchBusqueda && matchRol;
   });
 
-  const rolBadge = (rol) => ({
-    admin: 'bg-red-100 text-red-700',
-    docente: 'bg-blue-100 text-blue-700',
-    ayudante: 'bg-green-100 text-green-700',
-  }[rol] || 'bg-gray-100 text-gray-600');
-
+  const rolBadge = (rol) => ({ admin: 'bg-red-100 text-red-700', docente: 'bg-blue-100 text-blue-700', ayudante: 'bg-green-100 text-green-700' }[rol] || 'bg-gray-100 text-gray-600');
   const validarSoloLetras = v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras';
   const validarSoloNumeros = v => /^\d+$/.test(v) || 'Solo se permiten números';
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Usuarios</h1>
         <button onClick={() => abrirModal()}
@@ -113,7 +94,6 @@ const UsuariosPage = () => {
         </button>
       </div>
 
-      {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -128,12 +108,10 @@ const UsuariosPage = () => {
         </select>
       </div>
 
-      {/* Tabla / Tarjetas */}
       {cargando ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
       ) : (
         <>
-          {/* Desktop table */}
           <div className="hidden md:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -148,10 +126,8 @@ const UsuariosPage = () => {
                   <tr key={u.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {u.foto_url
-                          ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                          : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold">{u.nombre_completo[0]}</div>
-                        }
+                        {u.foto_url ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                          : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold">{u.nombre_completo[0]}</div>}
                         <span className="font-medium text-gray-800">{u.nombre_completo}</span>
                       </div>
                     </td>
@@ -178,21 +154,16 @@ const UsuariosPage = () => {
                 ))}
               </tbody>
             </table>
-            {usuariosFiltrados.length === 0 && (
-              <p className="text-center text-gray-400 py-8">No se encontraron usuarios</p>
-            )}
+            {usuariosFiltrados.length === 0 && <p className="text-center text-gray-400 py-8">No se encontraron usuarios</p>}
           </div>
 
-          {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {usuariosFiltrados.map(u => (
               <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    {u.foto_url
-                      ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                      : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">{u.nombre_completo[0]}</div>
-                    }
+                    {u.foto_url ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">{u.nombre_completo[0]}</div>}
                     <div>
                       <p className="font-semibold text-gray-800 text-sm">{u.nombre_completo}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${rolBadge(u.rol)}`}>{ROLES.find(r => r.value === u.rol)?.label}</span>
@@ -210,67 +181,42 @@ const UsuariosPage = () => {
         </>
       )}
 
-      {/* Modal */}
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      {modal && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="font-bold text-gray-800">{editando ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
-              {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre_completo ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Nombre y apellido"
-                  {...register('nombre_completo', {
-                    required: 'Requerido',
-                    validate: validarSoloLetras,
-                  })} />
+                  {...register('nombre_completo', { required: 'Requerido', validate: validarSoloLetras })} />
                 {errors.nombre_completo && <p className="text-red-500 text-xs mt-1">{errors.nombre_completo.message}</p>}
               </div>
-
-              {/* Cédula */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número de cédula *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.cedula ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="0000000000"
-                  {...register('cedula', {
-                    required: 'Requerido',
-                    validate: validarSoloNumeros,
-                    minLength: { value: 8, message: 'Mínimo 8 dígitos' },
-                    maxLength: { value: 15, message: 'Máximo 15 dígitos' },
-                  })} />
+                  {...register('cedula', { required: 'Requerido', validate: validarSoloNumeros, minLength: { value: 8, message: 'Mínimo 8 dígitos' }, maxLength: { value: 15, message: 'Máximo 15 dígitos' } })} />
                 {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula.message}</p>}
               </div>
-
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
                 <input type="email" className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.email ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="correo@ejemplo.com"
-                  {...register('email', {
-                    required: 'Requerido',
-                    pattern: { value: /^\S+@\S+\.\S+$/, message: 'Email inválido' },
-                  })} />
+                  {...register('email', { required: 'Requerido', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Email inválido' } })} />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
               </div>
-
-              {/* Teléfono */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.telefono ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="0999999999"
-                  {...register('telefono', {
-                    required: 'Requerido',
-                    validate: validarSoloNumeros,
-                    minLength: { value: 7, message: 'Mínimo 7 dígitos' },
-                  })} />
+                  {...register('telefono', { required: 'Requerido', validate: validarSoloNumeros, minLength: { value: 7, message: 'Mínimo 7 dígitos' } })} />
                 {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono.message}</p>}
               </div>
-
-              {/* Rol */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
                 <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -278,8 +224,6 @@ const UsuariosPage = () => {
                   {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
-
-              {/* Password (solo al crear) */}
               {!editando && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
@@ -305,7 +249,6 @@ const UsuariosPage = () => {
                   <p className="text-xs text-gray-400 mt-1">Debe tener: mayúscula, minúscula, número y carácter especial</p>
                 </div>
               )}
-
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
                 <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
@@ -314,7 +257,8 @@ const UsuariosPage = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
