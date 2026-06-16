@@ -164,7 +164,7 @@ const ChecklistPage = () => {
       <div className="space-y-6">
         {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden p-6"
-          style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
+          style={{ background: 'linear-gradient(135deg, var(--p600) 0%, var(--p700) 100%)' }}>
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white" style={{ transform: 'translate(30%,-30%)' }} />
           </div>
@@ -174,7 +174,7 @@ const ChecklistPage = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">Checklist de Asistencia</h1>
-              <p className="text-sm mt-0.5" style={{ color: '#9EC5D0' }}>Selecciona la reunión y grupo para comenzar</p>
+              <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>Selecciona la reunión y grupo para comenzar</p>
             </div>
           </div>
         </div>
@@ -214,10 +214,10 @@ const ChecklistPage = () => {
     return (
       <div className="space-y-6">
         <div className="relative rounded-2xl overflow-hidden p-6"
-          style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
+          style={{ background: 'linear-gradient(135deg, var(--p600) 0%, var(--p700) 100%)' }}>
           <div className="relative">
             <h1 className="text-xl font-bold text-white">Checklist de Asistencia</h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9EC5D0' }}>{reunionInfo?.nombre} · {grupoInfo?.nombre}</p>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>{reunionInfo?.nombre} · {grupoInfo?.nombre}</p>
           </div>
         </div>
         <div className="max-w-lg mx-auto space-y-4">
@@ -257,7 +257,7 @@ const ChecklistPage = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       {/* Header activo */}
-      <div className="relative rounded-2xl overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
+      <div className="relative rounded-2xl overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, var(--p600) 0%, var(--p700) 100%)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
@@ -265,7 +265,7 @@ const ChecklistPage = () => {
             </div>
             <div>
               <h1 className="font-bold text-white">{grupoActivo?.nombre || 'Checklist de Asistencia'}</h1>
-              <p className="text-xs mt-0.5" style={{ color: '#9EC5D0' }}>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
                 {registro.fecha} · {reunionActiva?.nombre} · {asistencias.length} asistente{asistencias.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -310,7 +310,7 @@ const ChecklistPage = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-gray-800">Asistentes</h2>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: '#1F4E5F' }}>{asistencias.length}</span>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: 'var(--p600)' }}>{asistencias.length}</span>
         </div>
         {asistencias.length === 0 ? (
           <div className="text-center py-10">
@@ -323,7 +323,7 @@ const ChecklistPage = () => {
               <div key={a.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition group">
                 <div className="flex items-center gap-3">
                   <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                    style={{ background: '#1F4E5F' }}>{i + 1}</span>
+                    style={{ background: 'var(--p600)' }}>{i + 1}</span>
                   <div>
                     <p className="text-sm font-semibold text-gray-800">{a.nino?.nombre_completo}</p>
                     <div className="flex items-center gap-2 mt-0.5">
