@@ -17,7 +17,7 @@ const buildLayout = (navItems, rolLabel, color) => {
       <div className={`flex flex-col h-full bg-${color}-800`}>
         <div className={`p-6 border-b border-${color}-700`}>
           <div className="flex items-center gap-3">
-            <span className="text-2xl">✝️</span>
+            <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
             <div>
               <p className="text-white font-bold text-sm">Verbo Mañosca</p>
               <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
