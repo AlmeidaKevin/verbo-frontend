@@ -13,13 +13,11 @@ const TareasPage = () => {
   const [editando, setEditando] = useState(null);
   const [archivos, setArchivos] = useState([]);
   const [cargando, setCargando] = useState(false);
-
   const [descIA, setDescIA] = useState('');
   const [iaActiva, setIaActiva] = useState(false);
   const [iaCargando, setIaCargando] = useState(false);
   const [iaIndice, setIaIndice] = useState(0);
   const [iaResultado, setIaResultado] = useState(null);
-
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
   useEffect(() => { cargarDatos(); }, []);
@@ -36,17 +34,9 @@ const TareasPage = () => {
   };
 
   const abrirModal = (tarea = null) => {
-    setEditando(tarea);
-    setArchivos([]);
-    setIaActiva(false);
-    setIaResultado(null);
-    setDescIA('');
-    if (tarea) {
-      setValue('titulo', tarea.titulo);
-      setValue('descripcion', tarea.descripcion);
-      setValue('reunion_id', tarea.reunion_id || '');
-      setValue('grupo_id', tarea.grupo_id || '');
-    } else { reset(); }
+    setEditando(tarea); setArchivos([]); setIaActiva(false); setIaResultado(null); setDescIA('');
+    if (tarea) { setValue('titulo', tarea.titulo); setValue('descripcion', tarea.descripcion); setValue('reunion_id', tarea.reunion_id || ''); setValue('grupo_id', tarea.grupo_id || ''); }
+    else { reset(); }
     setModal(true);
   };
 
@@ -56,13 +46,11 @@ const TareasPage = () => {
     setCargando(true);
     try {
       const formData = new FormData();
-      formData.append('titulo', datos.titulo);
-      formData.append('descripcion', datos.descripcion);
+      formData.append('titulo', datos.titulo); formData.append('descripcion', datos.descripcion);
       if (datos.reunion_id) formData.append('reunion_id', datos.reunion_id);
       if (datos.grupo_id) formData.append('grupo_id', datos.grupo_id);
       if (iaResultado) formData.append('generado_por_ia', 'true');
       archivos.forEach(f => formData.append('archivos', f));
-
       if (editando) {
         const { data } = await api.put(`/tareas/${editando.id}`, { titulo: datos.titulo, descripcion: datos.descripcion });
         setTareas(prev => prev.map(t => t.id === editando.id ? data.tarea : t));
@@ -73,18 +61,14 @@ const TareasPage = () => {
         toast.success('Tarea publicada');
       }
       cerrarModal();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al guardar tarea');
-    } finally { setCargando(false); }
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar tarea'); }
+    finally { setCargando(false); }
   };
 
   const eliminar = async (id) => {
     if (!window.confirm('¿Eliminar esta tarea?')) return;
-    try {
-      await api.delete(`/tareas/${id}`);
-      setTareas(prev => prev.filter(t => t.id !== id));
-      toast.success('Tarea eliminada');
-    } catch { toast.error('Error al eliminar'); }
+    try { await api.delete(`/tareas/${id}`); setTareas(prev => prev.filter(t => t.id !== id)); toast.success('Tarea eliminada'); }
+    catch { toast.error('Error al eliminar'); }
   };
 
   const generarConIA = async () => {
@@ -92,23 +76,16 @@ const TareasPage = () => {
     setIaCargando(true);
     try {
       const { data } = await api.post('/tareas/generar-ia', { descripcion: descIA, indice: iaIndice });
-      setIaResultado(data);
-      setValue('titulo', data.titulo);
-      setValue('descripcion', data.descripcion);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al generar con IA');
-    } finally { setIaCargando(false); }
+      setIaResultado(data); setValue('titulo', data.titulo); setValue('descripcion', data.descripcion);
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al generar con IA'); }
+    finally { setIaCargando(false); }
   };
 
   const siguienteOpcionIA = async () => {
-    const nuevoIndice = iaIndice + 1;
-    setIaIndice(nuevoIndice);
-    setIaCargando(true);
+    const nuevoIndice = iaIndice + 1; setIaIndice(nuevoIndice); setIaCargando(true);
     try {
       const { data } = await api.post('/tareas/generar-ia', { descripcion: descIA, indice: nuevoIndice });
-      setIaResultado(data);
-      setValue('titulo', data.titulo);
-      setValue('descripcion', data.descripcion);
+      setIaResultado(data); setValue('titulo', data.titulo); setValue('descripcion', data.descripcion);
     } catch { toast.error('Error al generar siguiente opción'); }
     finally { setIaCargando(false); }
   };
@@ -122,53 +99,73 @@ const TareasPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Tareas / Deberes</h1>
+      {/* Banner indigo */}
+      <div className="relative rounded-2xl overflow-hidden p-6 flex items-center justify-between gap-4"
+        style={{ background: 'linear-gradient(135deg, #3730a3 0%, #312e81 100%)' }}>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white" style={{ transform: 'translate(30%,-30%)' }} />
+        </div>
+        <div className="relative">
+          <h1 className="text-xl font-bold text-white">Tareas / Deberes</h1>
+          <p className="text-sm mt-0.5 text-indigo-300">
+            {tareas.length} tarea{tareas.length !== 1 ? 's' : ''} publicada{tareas.length !== 1 ? 's' : ''}
+          </p>
+        </div>
         <button onClick={() => abrirModal()}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
+          className="relative flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
           <FiPlus size={18} /> Nueva Tarea
         </button>
       </div>
 
       {cargando && !modal ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" /></div>
       ) : tareas.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-          <FiBookOpen className="mx-auto text-gray-300 mb-3" size={40} />
-          <p className="text-gray-500">No hay tareas publicadas aún</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-indigo-50">
+            <FiBookOpen size={28} className="text-indigo-400" />
+          </div>
+          <p className="text-gray-600 font-semibold">No hay tareas publicadas aún</p>
+          <p className="text-gray-400 text-sm mt-1">Crea la primera tarea para tus alumnos</p>
+          <button onClick={() => abrirModal()}
+            className="mt-4 inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl text-white bg-indigo-700 hover:bg-indigo-800 transition">
+            <FiPlus size={16} /> Nueva tarea
+          </button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {tareas.map(tarea => (
-            <div key={tarea.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1">
+            <div key={tarea.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition group">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+                  <FiBookOpen size={18} className="text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-800 text-sm">{tarea.titulo}</h3>
+                    <h3 className="font-bold text-gray-800 text-sm truncate">{tarea.titulo}</h3>
                     {tarea.generado_por_ia && (
-                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                         <FiCpu size={10} /> IA
                       </span>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {tarea.reunion && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{tarea.reunion.nombre}</span>}
-                    {tarea.grupo && <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{tarea.grupo.nombre}</span>}
+                    {tarea.grupo && <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">{tarea.grupo.nombre}</span>}
                   </div>
                   <p className="text-xs text-gray-500 line-clamp-2">{tarea.descripcion}</p>
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => abrirModal(tarea)} className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"><FiEdit2 size={15} /></button>
-                  <button onClick={() => eliminar(tarea.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={15} /></button>
+                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                  <button onClick={() => abrirModal(tarea)} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"><FiEdit2 size={14} /></button>
+                  <button onClick={() => eliminar(tarea.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={14} /></button>
                 </div>
               </div>
               {tarea.archivos?.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="pt-3 border-t border-gray-100">
                   <p className="text-xs text-gray-400 mb-1 flex items-center gap-1"><FiPaperclip size={11} /> {tarea.archivos.length} archivo(s)</p>
                   <div className="flex flex-wrap gap-1">
                     {tarea.archivos.map((a, i) => (
                       <a key={i} href={a.url} target="_blank" rel="noreferrer"
-                        className="text-xs text-primary-600 bg-primary-50 px-2 py-1 rounded-lg hover:bg-primary-100 transition truncate max-w-[140px]">
+                        className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100 transition truncate max-w-[140px]">
                         {a.nombre}
                       </a>
                     ))}
@@ -185,7 +182,10 @@ const TareasPage = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
-              <h2 className="font-bold text-gray-800">{editando ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
+              <div>
+                <h2 className="font-bold text-gray-800">{editando ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Crea o edita una tarea para tus alumnos</p>
+              </div>
               <button onClick={cerrarModal} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition"><FiX /></button>
             </div>
             <div className="p-6 space-y-5">
@@ -198,9 +198,9 @@ const TareasPage = () => {
                   </button>
                   {iaActiva && (
                     <div className="mt-3 space-y-3">
-                      <p className="text-xs text-purple-600">Describe brevemente qué tipo de tarea o deber quieres y la IA generará el título y descripción.</p>
+                      <p className="text-xs text-purple-600">Describe qué tipo de tarea quieres y la IA generará el título y descripción.</p>
                       <textarea value={descIA} onChange={e => setDescIA(e.target.value)}
-                        placeholder="Ej: Una tarea sobre la historia de David y Goliat para niños de 6 años..."
+                        placeholder="Ej: Una tarea sobre David y Goliat para niños de 6 años..."
                         rows={2} className="w-full border border-purple-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400" />
                       <div className="flex gap-2">
                         <button onClick={generarConIA} disabled={iaCargando}
@@ -215,7 +215,7 @@ const TareasPage = () => {
                           </button>
                         )}
                       </div>
-                      {iaResultado && <p className="text-xs text-purple-500">✨ Tarea generada por IA — puedes editarla antes de publicar</p>}
+                      {iaResultado && <p className="text-xs text-purple-500">✨ Tarea generada — puedes editarla antes de publicar</p>}
                     </div>
                   )}
                 </div>
@@ -230,7 +230,7 @@ const TareasPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
                   <textarea rows={4} className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.descripcion ? 'border-red-400' : 'border-gray-300'}`}
-                    placeholder="Descripción detallada de la tarea..." {...register('descripcion', { required: 'La descripción es requerida' })} />
+                    placeholder="Descripción detallada..." {...register('descripcion', { required: 'La descripción es requerida' })} />
                   {errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>}
                 </div>
                 {!editando && (
@@ -253,8 +253,8 @@ const TareasPage = () => {
                 )}
                 {!editando && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Archivos / Imágenes <span className="text-gray-400 font-normal">(máx. 3 archivos de 5MB)</span></label>
-                    <label className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-primary-400 transition">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Archivos <span className="text-gray-400 font-normal">(máx. 3 de 5MB)</span></label>
+                    <label className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-indigo-400 transition">
                       <FiPaperclip className="text-gray-400" />
                       <span className="text-sm text-gray-500">Seleccionar archivos...</span>
                       <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={handleArchivos} />
@@ -263,8 +263,7 @@ const TareasPage = () => {
                       <div className="mt-2 flex flex-wrap gap-2">
                         {archivos.map((f, i) => (
                           <div key={i} className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-lg">
-                            <FiPaperclip size={11} />
-                            <span className="truncate max-w-[120px]">{f.name}</span>
+                            <FiPaperclip size={11} /><span className="truncate max-w-[120px]">{f.name}</span>
                             <button type="button" onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))} className="ml-1 text-gray-400 hover:text-red-500"><FiX size={12} /></button>
                           </div>
                         ))}
