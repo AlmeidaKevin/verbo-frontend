@@ -23,6 +23,7 @@ import PerfilPage from './pages/shared/PerfilPage';
 // Docente
 import DocenteLayout from './components/shared/DocenteLayout';
 import DocenteDashboard from './pages/docente/DocenteDashboard';
+import ReportesDocentePage from './pages/docente/ReportesDocentePage';
 import MisGruposPage from './pages/docente/MisGruposPage';
 import ChecklistDocentePage from './pages/docente/ChecklistDocentePage';
 import TareasPage from './pages/docente/TareasPage';
@@ -91,6 +92,7 @@ function App() {
           {/* Docente */}
           <Route path="/docente" element={<RutaProtegida roles={['docente']}><DocenteLayout /></RutaProtegida>}>
             <Route path="dashboard" element={<DocenteDashboard />} />
+            <Route path="reportes" element={<ReportesDocentePage />} />
             <Route path="grupos" element={<MisGruposPage />} />
             <Route path="checklist" element={<ChecklistDocentePage />} />
             <Route path="tareas" element={<TareasPage />} />
