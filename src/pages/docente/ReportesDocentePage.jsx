@@ -98,22 +98,22 @@ const ReportesDocentePage = () => {
               <tbody className="divide-y divide-gray-100">
                 {registros.map(r => (
                   <tr key={r.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 text-gray-700 font-medium">{r.fecha}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.reunion?.nombre}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.grupo?.nombre}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-center text-gray-700 font-medium">{r.fecha}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">{r.reunion?.nombre}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">{r.grupo?.nombre}</td>
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
                       {r.grupo?.edad_min !== undefined ? `${r.grupo.edad_min}–${r.grupo.edad_max} años` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
                       {r.hora_primer_visto ? new Date(r.hora_primer_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
                       {r.hora_ultimo_visto ? new Date(r.hora_ultimo_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{r.registrado_por?.nombre_completo || '—'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">{r.registrado_por?.nombre_completo || '—'}</td>
+                    <td className="px-4 py-3 text-center">
                       <button onClick={() => setModalDescarga(r.id)}
-                        className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition">
+                        className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition">
                         <FiDownload size={12} /> Descargar
                       </button>
                     </td>
