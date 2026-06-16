@@ -52,9 +52,10 @@ const buildLayout = (navItems, rolLabel, color) => {
         </div>
       </div>
     );
-
+    
+    const rolClass = color === 'indigo' ? 'rol-docente' : color === 'violet' ? 'rol-ayudante' : '';
     return (
-      <div className="flex h-screen bg-gray-50 rol-docente">
+      <div className={`flex h-screen bg-gray-50 ${rolClass}`}>
         {/* ── Sidebar DESKTOP ───────────────────────────────────── */}
         <aside
           className={`hidden lg:flex flex-col bg-${color}-800 min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}
