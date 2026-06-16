@@ -151,15 +151,25 @@ const ChecklistPage = () => {
 
   const marcarAsistencia = async (nino) => {
     try {
-      const { data } = await api.post('/asistencias/marcar', { registro_id: registro.id, nino_id: nino.id, llego_tarde: false });
+      const { data } = await api.post('/asistencias/marcar', {
+        registro_id: registro.id,
+        nino_id: nino.id,
+        llego_tarde: false,
+      });
       setAsistencias(prev => {
         if (prev.find(a => a.id === data.asistencia.id)) return prev;
         return [...prev, { ...data.asistencia, nino }];
       });
       setBusqueda('');
       toast.success(`✅ ${nino.nombre_completo} marcado`);
-    } catch (err) { toast.error(err.response?.data?.message || 'Error al marcar'); }
+    } catch (err) {
+      const msg = err.response?.data?.message || '';
+      // Si ya fue marcado (por otro dispositivo vía realtime), ignorar silenciosamente
+      if (msg.includes('ya fue marcado')) return;
+      toast.error(msg || 'Error al marcar');
+    }
   };
+
 
   const desmarcarAsistencia = async (asistenciaId, ninoNombre) => {
     if (!window.confirm(`¿Desmarcar a ${ninoNombre}? Se eliminará de la lista de asistentes.`)) return;
