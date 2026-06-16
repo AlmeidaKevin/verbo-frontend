@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { FiPlus, FiTrash2, FiX, FiPaperclip, FiSend } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -29,11 +30,7 @@ const PublicacionesAdminPage = () => {
   const cargar = async () => {
     setCargando(true);
     try {
-      const [pRes, uRes, gRes] = await Promise.all([
-        api.get('/publicaciones'),
-        api.get('/usuarios'),
-        api.get('/grupos'),
-      ]);
+      const [pRes, uRes, gRes] = await Promise.all([api.get('/publicaciones'), api.get('/usuarios'), api.get('/grupos')]);
       setPublicaciones(pRes.data.publicaciones || []);
       setUsuarios(uRes.data.usuarios?.filter(u => u.activo && u.rol !== 'admin') || []);
       setGrupos(gRes.data.grupos || []);
@@ -41,21 +38,12 @@ const PublicacionesAdminPage = () => {
     finally { setCargando(false); }
   };
 
-  const cerrar = () => {
-    setModal(false);
-    setArchivos([]);
-    setTipoSel('todos');
-    setDestinatariosSeleccionados([]);
-    reset();
-  };
+  const cerrar = () => { setModal(false); setArchivos([]); setTipoSel('todos'); setDestinatariosSeleccionados([]); reset(); };
 
   const toggleDestinatario = (id) => {
-    setDestinatariosSeleccionados(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    setDestinatariosSeleccionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  // Para 'por_grupo': obtener usuarios de esos grupos
   const obtenerDestinatariosDeGrupos = async (grupoIds) => {
     const ids = new Set();
     for (const gId of grupoIds) {
@@ -72,17 +60,13 @@ const PublicacionesAdminPage = () => {
     setCargando(true);
     try {
       let destIds = destinatariosSeleccionados;
-      if (tipoSel === 'por_grupo') {
-        destIds = await obtenerDestinatariosDeGrupos(destinatariosSeleccionados);
-      }
-
+      if (tipoSel === 'por_grupo') destIds = await obtenerDestinatariosDeGrupos(destinatariosSeleccionados);
       const formData = new FormData();
       formData.append('titulo', datos.titulo);
       formData.append('contenido', datos.contenido);
       formData.append('tipo_destinatario', tipoSel);
       formData.append('destinatarios_ids', JSON.stringify(destIds));
       archivos.forEach(f => formData.append('archivos', f));
-
       const { data } = await api.post('/publicaciones', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setPublicaciones(prev => [data.publicacion, ...prev]);
       toast.success('Publicación enviada y notificaciones enviadas por email');
@@ -114,9 +98,7 @@ const PublicacionesAdminPage = () => {
       </div>
 
       <div className="space-y-4">
-        {publicaciones.length === 0 && !cargando && (
-          <div className="text-center py-12 text-gray-400">No hay publicaciones</div>
-        )}
+        {publicaciones.length === 0 && !cargando && <div className="text-center py-12 text-gray-400">No hay publicaciones</div>}
         {publicaciones.map(p => (
           <div key={p.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
             <div className="flex items-start justify-between gap-2">
@@ -144,9 +126,9 @@ const PublicacionesAdminPage = () => {
         ))}
       </div>
 
-      {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-lg my-8 shadow-2xl">
+      {modal && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="font-bold text-gray-800">Nueva Publicación</h2>
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
@@ -158,15 +140,12 @@ const PublicacionesAdminPage = () => {
                   {...register('titulo', { required: 'Requerido' })} />
                 {errors.titulo && <p className="text-red-500 text-xs mt-1">{errors.titulo.message}</p>}
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Contenido *</label>
                 <textarea rows={4} className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.contenido ? 'border-red-400' : 'border-gray-300'}`}
                   {...register('contenido', { required: 'Requerido' })} />
                 {errors.contenido && <p className="text-red-500 text-xs mt-1">{errors.contenido.message}</p>}
               </div>
-
-              {/* Destinatarios */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Enviar a</label>
                 <select value={tipoSel} onChange={e => { setTipoSel(e.target.value); setDestinatariosSeleccionados([]); }}
@@ -174,17 +153,13 @@ const PublicacionesAdminPage = () => {
                   {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
-
-              {/* Selección individual de usuarios */}
               {tipoSel === 'individual' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar usuarios</label>
                   <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                     {usuarios.map(u => (
                       <label key={u.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
-                        <input type="checkbox" checked={destinatariosSeleccionados.includes(u.id)}
-                          onChange={() => toggleDestinatario(u.id)}
-                          className="w-4 h-4 rounded text-primary-600" />
+                        <input type="checkbox" checked={destinatariosSeleccionados.includes(u.id)} onChange={() => toggleDestinatario(u.id)} className="w-4 h-4 rounded text-primary-600" />
                         <div>
                           <p className="text-sm text-gray-800">{u.nombre_completo}</p>
                           <p className="text-xs text-gray-400">{u.email} · {u.rol}</p>
@@ -192,22 +167,16 @@ const PublicacionesAdminPage = () => {
                       </label>
                     ))}
                   </div>
-                  {destinatariosSeleccionados.length > 0 && (
-                    <p className="text-xs text-primary-600 mt-1">{destinatariosSeleccionados.length} seleccionado(s)</p>
-                  )}
+                  {destinatariosSeleccionados.length > 0 && <p className="text-xs text-primary-600 mt-1">{destinatariosSeleccionados.length} seleccionado(s)</p>}
                 </div>
               )}
-
-              {/* Selección por grupos */}
               {tipoSel === 'por_grupo' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar grupos</label>
                   <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
                     {grupos.map(g => (
                       <label key={g.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
-                        <input type="checkbox" checked={destinatariosSeleccionados.includes(g.id)}
-                          onChange={() => toggleDestinatario(g.id)}
-                          className="w-4 h-4 rounded text-primary-600" />
+                        <input type="checkbox" checked={destinatariosSeleccionados.includes(g.id)} onChange={() => toggleDestinatario(g.id)} className="w-4 h-4 rounded text-primary-600" />
                         <div>
                           <p className="text-sm text-gray-800">{g.nombre}</p>
                           <p className="text-xs text-gray-400">{g.reunion?.nombre}</p>
@@ -217,8 +186,6 @@ const PublicacionesAdminPage = () => {
                   </div>
                 </div>
               )}
-
-              {/* Archivos */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Archivos adjuntos (máx. 3 de 5MB)</label>
                 <label className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-primary-400 transition">
@@ -241,7 +208,6 @@ const PublicacionesAdminPage = () => {
                   </div>
                 )}
               </div>
-
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
                 <button type="submit" disabled={cargando}
@@ -251,7 +217,8 @@ const PublicacionesAdminPage = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
