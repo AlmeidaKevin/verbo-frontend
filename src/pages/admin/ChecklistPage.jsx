@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import supabase from '../../config/supabase';
 import api from '../../services/api';
 
 const ChecklistPage = () => {
@@ -33,6 +34,52 @@ const ChecklistPage = () => {
     if (busqueda.trim()) setFiltrados(sinMarcar.filter(n => n.nombre_completo.toLowerCase().includes(busqueda.toLowerCase())));
     else setFiltrados(sinMarcar);
   }, [busqueda, todosNinos, asistencias]);
+
+  useEffect(() => {
+    if (!registro) return;
+  
+    const canal = supabase
+      .channel(`checklist-${registro.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'asistencias',
+          filter: `registro_id=eq.${registro.id}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            // Alguien marcó un niño — cargar datos completos del niño
+            const { data } = await api.get(`/ninos/${payload.new.nino_id}`).catch(() => ({ data: null }));
+            const nino = data?.nino;
+            setAsistencias(prev => {
+              // Evitar duplicados
+              if (prev.find(a => a.id === payload.new.id)) return prev;
+              return [...prev, { ...payload.new, nino }].sort((a, b) => a.orden_llegada - b.orden_llegada);
+            });
+          }
+  
+          if (payload.eventType === 'DELETE') {
+            // Alguien desmarcó un niño
+            setAsistencias(prev => prev.filter(a => a.id !== payload.old.id));
+          }
+  
+          if (payload.eventType === 'UPDATE') {
+            // Alguien editó comentario o tarde
+            setAsistencias(prev =>
+              prev.map(a => a.id === payload.new.id ? { ...a, ...payload.new } : a)
+            );
+          }
+        }
+      )
+      .subscribe();
+  
+    // Limpiar suscripción al salir
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [registro?.id]);
 
   const cargarReuniones = async () => {
     try { const { data } = await api.get('/reuniones'); setReuniones(data.reuniones || []); }
