@@ -75,14 +75,14 @@ const AdminLayout = () => {
         <div className={`border-b border-primary-700 flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
           {!colapsado && (
             <div className="flex items-center gap-3">
-              <span className="text-2xl">✝️</span>
+              <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
               <div>
                 <p className="text-white font-bold text-sm leading-tight">Verbo Mañosca</p>
                 <p className="text-primary-300 text-xs">Escuela Dominical</p>
               </div>
             </div>
           )}
-          {colapsado && <span className="text-2xl">✝️</span>}
+          {colapsado && <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />}
           <button
             onClick={() => setColapsado(p => !p)}
             className={`text-primary-300 hover:text-white hover:bg-primary-700 rounded-lg p-1.5 transition ${colapsado ? 'mt-0' : ''}`}
