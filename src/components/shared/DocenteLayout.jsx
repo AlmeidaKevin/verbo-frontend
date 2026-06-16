@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { FiMenu, FiHome, FiGrid, FiCheckSquare, FiBookOpen, FiBell, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiHome, FiGrid, FiCheckSquare, FiBookOpen, FiBell, FiUser, FiLogOut, FiBarChart2 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 const buildLayout = (navItems, rolLabel, color) => {
@@ -80,6 +80,7 @@ export const DocenteLayout = buildLayout([
   { to: '/docente/grupos', icon: FiGrid, label: 'Mis Grupos' },
   { to: '/docente/checklist', icon: FiCheckSquare, label: 'Checklist' },
   { to: '/docente/tareas', icon: FiBookOpen, label: 'Tareas' },
+  { to: '/docente/reportes', icon: FiBarChart2, label: 'Reportes' },
   { to: '/docente/publicaciones', icon: FiBell, label: 'Publicaciones' },
   { to: '/docente/perfil', icon: FiUser, label: 'Mi Perfil' },
 ], 'Docente / Líder', 'indigo');
