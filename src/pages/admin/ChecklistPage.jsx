@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid, FiCheckSquare } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid, FiCheckSquare, FiChevronDown } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import supabase from '../../config/supabase';
 import api from '../../services/api';
@@ -22,9 +22,17 @@ const ChecklistPage = () => {
   const [observacionGeneral, setObservacionGeneral] = useState('');
   const [mostrarObservacion, setMostrarObservacion] = useState(false);
   const [modalComentario, setModalComentario] = useState(null);
-  const [modalAgregar, setModalAgregar] = useState(false);
-  const [nuevoNino, setNuevoNino] = useState('');
   const [modalDescarga, setModalDescarga] = useState(false);
+
+  // Estado modal agregar niño
+  const [modalAgregar, setModalAgregar] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [masInfo, setMasInfo] = useState(false);
+  const [nuevoEdad, setNuevoEdad] = useState('');
+  const [nuevoContacto, setNuevoContacto] = useState('');
+  const [nuevoGrupoId, setNuevoGrupoId] = useState('');
+  const [nuevoObservacion, setNuevoObservacion] = useState('');
+
   const busquedaRef = useRef();
   const todosNinosRef = useRef([]);
 
@@ -147,22 +155,40 @@ const ChecklistPage = () => {
     } catch { toast.error('Error al descargar'); }
   };
 
+  const abrirModalAgregar = () => {
+    setNuevoNombre('');
+    setMasInfo(false);
+    setNuevoEdad('');
+    setNuevoContacto('');
+    setNuevoGrupoId(grupoSel || '');
+    setNuevoObservacion('');
+    setModalAgregar(true);
+  };
+
   const agregarNuevoNino = async () => {
-    if (!nuevoNino.trim()) return toast.error('Ingresa el nombre del niño');
-    if (/\d/.test(nuevoNino)) return toast.error('El nombre no puede contener números');
+    if (!nuevoNombre.trim()) return toast.error('Ingresa el nombre del niño');
+    if (/\d/.test(nuevoNombre)) return toast.error('El nombre no puede contener números');
+    if (masInfo && nuevoContacto && !/^\d+$/.test(nuevoContacto)) return toast.error('El contacto solo puede contener números');
+
     try {
-      const { data } = await api.post('/ninos', { nombre_completo: nuevoNino.trim(), grupo_id: grupoSel, numero_contacto: '0000000' });
+      const payload = {
+        nombre_completo: nuevoNombre.trim(),
+        grupo_id: nuevoGrupoId || grupoSel || null,
+        numero_contacto: nuevoContacto.trim() || '0000000',
+        edad: nuevoEdad ? parseInt(nuevoEdad) : null,
+        observacion: nuevoObservacion.trim() || null,
+      };
+      const { data } = await api.post('/ninos', payload);
       setTodosNinos(prev => [...prev, data.nino]);
-      setNuevoNino(''); setModalAgregar(false);
+      setModalAgregar(false);
       toast.success('Niño agregado');
     } catch (err) { toast.error(err.response?.data?.message || 'Error al agregar'); }
   };
 
-  // ── Pantalla 1: Selección ────────────────────────────────────
+  // ── Pantalla 1 ───────────────────────────────────────────────
   if (!registro && !modoSelector) {
     return (
       <div className="space-y-6">
-        {/* Banner */}
         <div className="relative rounded-2xl overflow-hidden p-6"
           style={{ background: 'linear-gradient(135deg, var(--p600) 0%, var(--p700) 100%)' }}>
           <div className="absolute inset-0 opacity-10">
@@ -178,7 +204,6 @@ const ChecklistPage = () => {
             </div>
           </div>
         </div>
-
         <div className="max-w-lg mx-auto">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
             <div>
@@ -207,7 +232,7 @@ const ChecklistPage = () => {
     );
   }
 
-  // ── Pantalla 2: Selector de lista ────────────────────────────
+  // ── Pantalla 2 ───────────────────────────────────────────────
   if (modoSelector) {
     const grupoInfo = grupos.find(g => g.id === grupoSel);
     const reunionInfo = reuniones.find(r => r.id === reunionSel);
@@ -256,7 +281,6 @@ const ChecklistPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      {/* Header activo */}
       <div className="relative rounded-2xl overflow-hidden p-4" style={{ background: 'linear-gradient(135deg, var(--p600) 0%, var(--p700) 100%)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -277,7 +301,6 @@ const ChecklistPage = () => {
         </div>
       </div>
 
-      {/* Buscador */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -286,7 +309,7 @@ const ChecklistPage = () => {
               className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" />
             {busqueda && <button onClick={() => setBusqueda('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><FiX size={16} /></button>}
           </div>
-          <button onClick={() => setModalAgregar(true)} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
+          <button onClick={abrirModalAgregar} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
             <FiUserPlus size={16} /> Agregar
           </button>
         </div>
@@ -306,7 +329,6 @@ const ChecklistPage = () => {
         )}
       </div>
 
-      {/* Lista asistentes */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-gray-800">Asistentes</h2>
@@ -345,7 +367,6 @@ const ChecklistPage = () => {
         )}
       </div>
 
-      {/* Observación */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
         <button onClick={() => setMostrarObservacion(p => !p)} className="w-full flex items-center justify-between p-4 text-left">
           <span className="font-medium text-gray-700 text-sm flex items-center gap-2">
@@ -364,7 +385,6 @@ const ChecklistPage = () => {
         )}
       </div>
 
-      {/* Botones acción */}
       <div className="flex gap-3">
         <button onClick={guardarRegistro} disabled={guardando}
           className="flex-1 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-60">
@@ -420,18 +440,99 @@ const ChecklistPage = () => {
         document.body
       )}
 
-      {/* Modal agregar */}
+      {/* Modal agregar niño */}
       {modalAgregar && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl mx-4">
-            <h3 className="font-bold text-gray-800 mb-1">Agregar niño</h3>
-            <p className="text-xs text-gray-400 mb-4">El niño quedará registrado en el grupo</p>
-            <input value={nuevoNino} onChange={e => setNuevoNino(e.target.value)} placeholder="Nombre completo del niño"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 mb-4"
-              onKeyDown={e => e.key === 'Enter' && agregarNuevoNino()} />
-            <div className="flex gap-2">
-              <button onClick={() => setModalAgregar(false)} className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
-              <button onClick={agregarNuevoNino} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition">Agregar</button>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+              <div>
+                <h3 className="font-bold text-gray-800">Agregar niño</h3>
+                <p className="text-xs text-gray-400 mt-0.5">El niño quedará registrado en el sistema</p>
+              </div>
+              <button onClick={() => setModalAgregar(false)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Nombre — siempre visible */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                <input
+                  value={nuevoNombre}
+                  onChange={e => setNuevoNombre(e.target.value)}
+                  placeholder="Nombre y apellido del niño"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onKeyDown={e => e.key === 'Enter' && !masInfo && agregarNuevoNino()}
+                  autoFocus
+                />
+              </div>
+
+              {/* Toggle más información */}
+              <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                <input
+                  type="checkbox"
+                  checked={masInfo}
+                  onChange={e => setMasInfo(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary-600"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700">Agregar más información</p>
+                  <p className="text-xs text-gray-400">Edad, contacto, grupo y observaciones</p>
+                </div>
+                <FiChevronDown size={16} className={`text-gray-400 transition-transform ${masInfo ? 'rotate-180' : ''}`} />
+              </label>
+
+              {/* Campos extra — visibles solo si masInfo */}
+              {masInfo && (
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Edad</label>
+                    <input
+                      type="number" min={0} max={17}
+                      value={nuevoEdad}
+                      onChange={e => setNuevoEdad(e.target.value)}
+                      placeholder="Ej: 7"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Número de contacto</label>
+                    <input
+                      value={nuevoContacto}
+                      onChange={e => setNuevoContacto(e.target.value)}
+                      placeholder="Ej: 0991234567"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Grupo asignado</label>
+                    <select
+                      value={nuevoGrupoId}
+                      onChange={e => setNuevoGrupoId(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Sin grupo asignado</option>
+                      {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.edad_min}–{g.edad_max} años)</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Observación <span className="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={nuevoObservacion}
+                      onChange={e => setNuevoObservacion(e.target.value)}
+                      placeholder="Alergias, condiciones especiales, etc."
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setModalAgregar(false)} className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
+                <button onClick={agregarNuevoNino} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition">Agregar</button>
+              </div>
             </div>
           </div>
         </div>,
