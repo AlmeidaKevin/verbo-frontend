@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookOpen, FiHeart, FiStar, FiSun } from 'react-icons/fi';
+import { FiBookOpen, FiHeart, FiStar, FiSun, FiUsers, FiClock, FiAward, FiSmile } from 'react-icons/fi';
 import api from '../../services/api';
 
 const EMOCIONES = [
-  { emoji: '😊', label: 'Feliz' },
-  { emoji: '🙏', label: 'Agradecido' },
-  { emoji: '😮', label: 'Sorprendido' },
-  { emoji: '💪', label: 'Animado' },
-  { emoji: '❤️', label: 'Con amor' },
+  { emoji: '😊', label: 'Feliz', color: 'bg-yellow-50 ring-yellow-400', msg: '¡Tu sonrisa ilumina todo! 🌟' },
+  { emoji: '🙏', label: 'Agradecido', color: 'bg-blue-50 ring-blue-400', msg: '¡Dar gracias es hermoso! 💙' },
+  { emoji: '😮', label: 'Sorprendido', color: 'bg-purple-50 ring-purple-400', msg: '¡Dios siempre nos sorprende! 🎉' },
+  { emoji: '💪', label: 'Animado', color: 'bg-green-50 ring-green-400', msg: '¡Tienes una energía increíble! 🚀' },
+  { emoji: '❤️', label: 'Con amor', color: 'bg-red-50 ring-red-400', msg: '¡Dios te ama y nosotros también! ❤️' },
+];
+
+const LOGROS = [
+  { emoji: '⭐', label: 'Primera asistencia', color: 'bg-yellow-100 text-yellow-700' },
+  { emoji: '📖', label: 'Aprendí un versículo', color: 'bg-blue-100 text-blue-700' },
+  { emoji: '🤝', label: 'Hice un amigo', color: 'bg-green-100 text-green-700' },
+  { emoji: '🎵', label: 'Canté con alegría', color: 'bg-purple-100 text-purple-700' },
+  { emoji: '🙌', label: 'Ayudé a alguien', color: 'bg-pink-100 text-pink-700' },
+  { emoji: '🌈', label: '5 asistencias seguidas', color: 'bg-orange-100 text-orange-700' },
 ];
 
 const PaginaPublica = () => {
   const [contenidos, setContenidos] = useState([]);
   const [emocionSel, setEmocionSel] = useState(null);
+  const [logroSel, setLogroSel] = useState(null);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -24,86 +34,209 @@ const PaginaPublica = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-orange-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
-          <div>
-            <h1 className="font-bold text-gray-800 text-lg leading-tight">Escuela Dominical</h1>
-            <p className="text-gray-500 text-xs">Iglesia Verbo Mañosca</p>
+    <div className="min-h-screen" style={{ background: '#FAF8F3' }}>
+
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <header className="bg-white shadow-sm sticky top-0 z-40 px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-10 h-10 rounded-full object-cover shadow-sm" />
+            <div>
+              <h1 className="font-bold leading-tight text-sm" style={{ color: '#1F4E5F' }}>Escuela Dominical</h1>
+              <p className="text-xs text-gray-500">Iglesia Cristiana Verbo Mañosca</p>
+            </div>
           </div>
+          <Link to="/login"
+            className="text-xs font-semibold px-4 py-2 rounded-xl text-white transition"
+            style={{ background: '#1F4E5F' }}>
+            Ingresar
+          </Link>
         </div>
-        <Link to="/login" className="text-xs text-primary-600 border border-primary-300 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition">
-          Ingresar
-        </Link>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-        {/* Bienvenida */}
-        <div className="text-center">
-          <div className="text-6xl mb-4">🌟</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">¡Hola, amiguito!</h2>
-          <p className="text-gray-500">Bienvenido a tu espacio especial de Escuela Dominical</p>
+      {/* ── Hero Banner ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 60%, #112C36 100%)', minHeight: 280 }}>
+        {/* Círculos decorativos */}
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-10 bg-white" style={{ transform: 'translate(30%, -30%)' }} />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10 bg-white" style={{ transform: 'translate(-20%, 30%)' }} />
+        <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full opacity-5 bg-white" style={{ transform: 'translateY(-50%)' }} />
+
+        <div className="relative max-w-4xl mx-auto px-4 py-12 flex flex-col sm:flex-row items-center gap-8">
+          <div className="flex-1 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"
+              style={{ background: 'rgba(200,169,107,0.2)', color: '#C8A96B', border: '1px solid rgba(200,169,107,0.3)' }}>
+              ✝️ Bienvenido a la Escuela Dominical
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-3">
+              ¡Un lugar especial<br />para los niños! 🌟
+            </h2>
+            <p className="text-sm mb-6" style={{ color: '#9EC5D0' }}>
+              Aprendemos, cantamos y crecemos juntos en la fe.<br />
+              Cada domingo es una aventura con Dios.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+              <a href="#contenido"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition"
+                style={{ background: '#C8A96B' }}>
+                Ver contenido de hoy
+              </a>
+              <Link to="/login"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}>
+                Soy docente / admin
+              </Link>
+            </div>
+          </div>
+
+          {/* Ilustración hero */}
+          <div className="shrink-0">
+            <div className="relative w-48 h-48 sm:w-56 sm:h-56">
+              {/* Logo grande */}
+              <div className="w-full h-full rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(200,169,107,0.4)' }}>
+                <img src="/favicon_verbo.png" alt="Logo" className="w-36 h-36 sm:w-44 sm:h-44 rounded-full object-cover shadow-xl" />
+              </div>
+              {/* Badges flotantes */}
+              <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg text-xl">⭐</div>
+              <div className="absolute -bottom-2 -left-2 w-10 h-10 rounded-full bg-pink-400 flex items-center justify-center shadow-lg text-lg">❤️</div>
+              <div className="absolute top-1/2 -right-4 w-9 h-9 rounded-full bg-green-400 flex items-center justify-center shadow-lg text-base">🙏</div>
+            </div>
+          </div>
         </div>
 
-        {/* Selector de emociones */}
+        {/* Ola inferior */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: 'block', height: 40 }}>
+            <path d="M0 40 C360 0 1080 0 1440 40 L1440 40 L0 40Z" fill="#FAF8F3"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* ── Tarjetas informativas ───────────────────────────────── */}
+      <section className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { emoji: '📖', label: 'Aprendemos la Biblia', color: 'bg-blue-50', text: 'text-blue-700' },
+            { emoji: '🎵', label: 'Cantamos con alegría', color: 'bg-yellow-50', text: 'text-yellow-700' },
+            { emoji: '🤝', label: 'Hacemos amigos', color: 'bg-green-50', text: 'text-green-700' },
+            { emoji: '🙏', label: 'Oramos juntos', color: 'bg-purple-50', text: 'text-purple-700' },
+          ].map(({ emoji, label, color, text }) => (
+            <div key={label} className={`${color} rounded-2xl p-4 text-center`}>
+              <div className="text-3xl mb-2">{emoji}</div>
+              <p className={`text-xs font-semibold ${text}`}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 space-y-8 pb-12">
+
+        {/* ── ¿Cómo te sientes? ─────────────────────────────────── */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-orange-100">
-          <h3 className="font-bold text-gray-800 text-center mb-4 flex items-center justify-center gap-2">
+          <h3 className="font-bold text-gray-800 text-center text-lg mb-1 flex items-center justify-center gap-2">
             <FiHeart className="text-red-400" /> ¿Cómo te sientes hoy?
           </h3>
+          <p className="text-center text-gray-400 text-xs mb-5">Toca la carita que más te representa</p>
           <div className="flex justify-center gap-3 flex-wrap">
-            {EMOCIONES.map(({ emoji, label }) => (
+            {EMOCIONES.map(({ emoji, label, color, msg }) => (
               <button key={label} onClick={() => setEmocionSel(emocionSel === label ? null : label)}
-                className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition ${emocionSel === label ? 'bg-yellow-100 ring-2 ring-yellow-400 scale-110' : 'bg-gray-50 hover:bg-yellow-50'}`}>
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all duration-200 ${
+                  emocionSel === label ? `${color} ring-2 scale-110 shadow-md` : 'bg-gray-50 hover:bg-yellow-50 hover:scale-105'
+                }`}>
                 <span className="text-3xl">{emoji}</span>
                 <span className="text-xs text-gray-600 font-medium">{label}</span>
               </button>
             ))}
           </div>
           {emocionSel && (
-            <p className="text-center text-sm text-yellow-700 font-medium mt-3">
-              ¡Qué bueno que te sientes <strong>{emocionSel}</strong>! 🎉
-            </p>
+            <div className="mt-4 text-center bg-yellow-50 rounded-2xl py-3 px-4">
+              <p className="text-sm text-yellow-700 font-semibold">
+                {EMOCIONES.find(e => e.label === emocionSel)?.msg}
+              </p>
+            </div>
           )}
         </div>
 
-        {/* Contenido de la semana */}
-        <div>
+        {/* ── Mis logros ────────────────────────────────────────── */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-yellow-100">
+          <h3 className="font-bold text-gray-800 text-lg mb-1 flex items-center gap-2">
+            <FiAward className="text-yellow-500" /> Mis logros especiales
+          </h3>
+          <p className="text-gray-400 text-xs mb-5">¡Toca los que ya conseguiste esta semana!</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {LOGROS.map(({ emoji, label, color }) => (
+              <button key={label} onClick={() => setLogroSel(logroSel === label ? null : label)}
+                className={`flex items-center gap-2 p-3 rounded-2xl text-left transition-all duration-200 border-2 ${
+                  logroSel === label
+                    ? `${color} border-current shadow-md scale-105`
+                    : 'bg-gray-50 border-transparent hover:border-gray-200 hover:scale-102'
+                }`}>
+                <span className="text-2xl shrink-0">{emoji}</span>
+                <span className="text-xs font-semibold text-gray-700 leading-tight">{label}</span>
+              </button>
+            ))}
+          </div>
+          {logroSel && (
+            <div className="mt-4 text-center bg-green-50 rounded-2xl py-3 px-4">
+              <p className="text-sm text-green-700 font-semibold">
+                🎉 ¡Felicitaciones! Conseguiste el logro: <strong>{logroSel}</strong>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Contenido de la semana ────────────────────────────── */}
+        <div id="contenido">
           <h3 className="font-bold text-gray-800 text-xl mb-4 flex items-center gap-2">
-            <FiBookOpen className="text-primary-600" /> Contenido de esta semana
+            <FiBookOpen style={{ color: '#1F4E5F' }} /> Contenido de esta semana
           </h3>
 
           {cargando ? (
-            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
+            <div className="flex justify-center py-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#1F4E5F' }} />
+            </div>
           ) : contenidos.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center border border-gray-200">
-              <span className="text-5xl block mb-3">📖</span>
-              <p className="text-gray-500">¡Tu maestra publicará el contenido pronto!</p>
+            <div className="bg-white rounded-3xl p-10 text-center border border-gray-200 shadow-sm">
+              <div className="text-6xl mb-4">📖</div>
+              <p className="text-gray-600 font-semibold text-lg">¡Pronto habrá contenido!</p>
+              <p className="text-gray-400 text-sm mt-1">Tu maestra está preparando algo especial para esta semana.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {contenidos.map((c, i) => (
-                <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-start gap-3 mb-3">
-                    <span className="text-2xl">📝</span>
-                    <div>
-                      <h4 className="font-bold text-gray-800">{c.titulo}</h4>
+                <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl"
+                      style={{ background: '#EEF4F6' }}>📝</div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-800 text-base">{c.titulo}</h4>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {c.reunion && <span className="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full">{c.reunion.nombre}</span>}
-                        {c.grupo && <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{c.grupo.nombre}</span>}
+                        {c.reunion && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                            style={{ background: '#EEF4F6', color: '#1F4E5F' }}>
+                            {c.reunion.nombre}
+                          </span>
+                        )}
+                        {c.grupo && (
+                          <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                            {c.grupo.nombre}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm whitespace-pre-line leading-relaxed">{c.descripcion}</p>
                   {c.publicado_por && (
-                    <p className="text-xs text-gray-400 mt-3">Por: {c.publicado_por.nombre_completo}</p>
+                    <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
+                      <FiSmile size={12} /> Por: {c.publicado_por.nombre_completo}
+                    </p>
                   )}
                   {c.archivos?.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {c.archivos.map((a, j) => (
                         <a key={j} href={a.url} target="_blank" rel="noreferrer"
-                          className="text-xs bg-primary-50 text-primary-700 px-3 py-1.5 rounded-xl hover:bg-primary-100 transition">
+                          className="text-xs px-3 py-1.5 rounded-xl hover:opacity-80 transition font-medium"
+                          style={{ background: '#EEF4F6', color: '#1F4E5F' }}>
                           📎 {a.nombre}
                         </a>
                       ))}
@@ -115,13 +248,34 @@ const PaginaPublica = () => {
           )}
         </div>
 
-        {/* Footer motivacional */}
-        <div className="bg-gradient-to-r from-primary-500 to-primary-700 rounded-3xl p-6 text-white text-center">
-          <FiSun className="mx-auto mb-2 text-yellow-300" size={28} />
-          <p className="font-bold text-lg">"Deja que los niños vengan a mí"</p>
-          <p className="text-primary-200 text-sm mt-1">— Marcos 10:14</p>
+        {/* ── Versículo ─────────────────────────────────────────── */}
+        <div className="rounded-3xl p-8 text-center relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 bg-white" style={{ transform: 'translate(30%, -30%)' }} />
+          <div className="relative">
+            <div className="text-4xl mb-3">✨</div>
+            <p className="font-bold text-white text-lg mb-1">
+              "Dejen que los niños vengan a mí"
+            </p>
+            <p className="text-sm" style={{ color: '#9EC5D0' }}>— Marcos 10:14</p>
+            <div className="mt-4 flex justify-center gap-2">
+              <span className="text-xl">⭐</span><span className="text-xl">❤️</span><span className="text-xl">🙏</span>
+            </div>
+          </div>
         </div>
-      </main>
+
+        {/* ── Footer ────────────────────────────────────────────── */}
+        <div className="text-center text-xs text-gray-400 pt-4 pb-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <img src="/favicon_verbo.png" alt="Logo" className="w-6 h-6 rounded-full object-cover" />
+            <span className="font-medium text-gray-500">Iglesia Cristiana Verbo Mañosca</span>
+          </div>
+          <p>Sistema de Gestión Escuela Dominical</p>
+          <Link to="/login" className="text-primary-600 hover:underline mt-1 inline-block font-medium">
+            Acceso para docentes y administradores
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
