@@ -63,7 +63,7 @@ const buildLayout = (navItems, rolLabel, color) => {
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:justify-end">
             <button onClick={() => setAbierto(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100"><FiMenu size={22} /></button>
-            <div className="text-right">
+            <div className="text-center ml-auto">
               <p className="text-sm font-medium text-gray-700">Panel {rolLabel}</p>
               <p className="text-xs text-gray-400">{usuario?.nombre_completo}</p>
             </div>
