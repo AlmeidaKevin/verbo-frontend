@@ -28,7 +28,7 @@ const PaginaPublica = () => {
       {/* Header */}
       <header className="bg-white shadow-sm px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">✝️</span>
+          <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
           <div>
             <h1 className="font-bold text-gray-800 text-lg leading-tight">Escuela Dominical</h1>
             <p className="text-gray-500 text-xs">Iglesia Verbo Mañosca</p>
