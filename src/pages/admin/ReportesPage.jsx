@@ -136,7 +136,6 @@ const ReportesPage = () => {
                 {registros.map(r => (
                   <tr key={r.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-3 text-center text-gray-700 font-medium">{r.fecha}</td>
-                    <td className="px-4 py-3 text-center text-gray-500 text-xs">{r.registrado_por?.nombre_completo || '—'}</td>
                     <td className="px-4 py-3 text-center text-gray-600">{r.reunion?.nombre}</td>
                     <td className="px-4 py-3 text-center text-gray-600">{r.grupo?.nombre}</td>
                     <td className="px-4 py-3 text-center text-gray-500 text-xs">
@@ -148,6 +147,7 @@ const ReportesPage = () => {
                     <td className="px-4 py-3 text-center text-gray-500 text-xs">
                       {r.hora_ultimo_visto ? new Date(r.hora_ultimo_visto).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">{r.registrado_por?.nombre_completo || '—'}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${r.guardado_at ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {r.guardado_at ? 'Guardado' : 'Pendiente'}
