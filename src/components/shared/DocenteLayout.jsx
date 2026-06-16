@@ -64,14 +64,14 @@ const buildLayout = (navItems, rolLabel, color) => {
           <div className={`border-b border-${color}-700 flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
             {!colapsado && (
               <div className="flex items-center gap-3">
-                <span className="text-2xl">✝️</span>
+                <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
                 <div>
                   <p className="text-white font-bold text-sm">Verbo Mañosca</p>
                   <p className={`text-${color}-300 text-xs`}>{rolLabel}</p>
                 </div>
               </div>
             )}
-            {colapsado && <span className="text-2xl">✝️</span>}
+            {colapsado && <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />}
             <button
               onClick={() => setColapsado(p => !p)}
               className={`text-${color}-300 hover:text-white hover:bg-${color}-700 rounded-lg p-1.5 transition`}
