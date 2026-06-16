@@ -166,7 +166,7 @@ const ChecklistPage = () => {
       const msg = err.response?.data?.message || '';
       // Si ya fue marcado (por otro dispositivo vía realtime), ignorar silenciosamente
       if (msg.includes('ya fue marcado')) {
-        toast('⚠️ Este niño ya fue marcado', { icon: '⚠️' });
+        toast(' Este niño ya fue marcado', { icon: '⚠️' });
         return;
       }
       toast.error(msg || 'Error al marcar');
