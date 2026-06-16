@@ -88,7 +88,7 @@ const AdminLayout = () => {
             <p className="text-xs text-gray-500">{usuario?.nombre_completo}</p>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 relative">
           <Outlet />
         </main>
       </div>
