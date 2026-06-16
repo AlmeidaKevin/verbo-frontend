@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FiPlus, FiEdit2, FiTrash2, FiClock, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 
 const DescripcionTexto = ({ texto }) => {
@@ -134,10 +135,9 @@ const ReunionesPage = () => {
           )}
         </div>
       )}
-
-      {modal && (
+      {modal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 my-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h2 className="font-bold text-gray-800">{editando ? 'Editar Reunión' : 'Nueva Reunión'}</h2>
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
