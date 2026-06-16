@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiUsers, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiToggleLeft, FiToggleRight, FiUserPlus } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -13,6 +13,9 @@ const GruposPage = () => {
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
+
+  // Ayudantes extra (lista dinámica de IDs)
+  const [ayudantesExtra, setAyudantesExtra] = useState([]);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -50,10 +53,30 @@ const GruposPage = () => {
       nombre: '', reunion_id: '', docente_id: '', ayudante1_id: '', ayudante2_id: '',
       edad_min: 1, edad_max: 5, ayudantes_checklist: false,
     });
+
+    // Cargar ayudantes extra si está editando
+    if (grupo?.ayudantes_extra?.length > 0) {
+      setAyudantesExtra(grupo.ayudantes_extra.map(a => a.ayudante?.id || ''));
+    } else {
+      setAyudantesExtra([]);
+    }
+
     setModal(true);
   };
 
-  const cerrar = () => { setModal(false); setEditando(null); };
+  const cerrar = () => { setModal(false); setEditando(null); setAyudantesExtra([]); };
+
+  const agregarAyudanteExtra = () => {
+    setAyudantesExtra(prev => [...prev, '']);
+  };
+
+  const quitarAyudanteExtra = (idx) => {
+    setAyudantesExtra(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const cambiarAyudanteExtra = (idx, valor) => {
+    setAyudantesExtra(prev => prev.map((v, i) => i === idx ? valor : v));
+  };
 
   const onSubmit = async (datos) => {
     if (parseInt(datos.edad_max) <= parseInt(datos.edad_min)) {
@@ -68,6 +91,7 @@ const GruposPage = () => {
         docente_id: datos.docente_id || null,
         ayudante1_id: datos.ayudante1_id || null,
         ayudante2_id: datos.ayudante2_id || null,
+        ayudantes_extra: ayudantesExtra.filter(id => id), // solo los que tienen valor
       };
       if (editando) {
         const { data } = await api.put(`/grupos/${editando.id}`, payload);
@@ -128,6 +152,7 @@ const GruposPage = () => {
                   <button onClick={() => eliminar(g.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={14} /></button>
                 </div>
               </div>
+
               <div className="bg-gray-50 rounded-xl p-3 space-y-2 text-xs mb-3">
                 <div className="flex items-center gap-2">
                   <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Edad</span>
@@ -145,7 +170,14 @@ const GruposPage = () => {
                   <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Ayud. 2</span>
                   <span className="text-gray-600">{g.ayudante2?.nombre_completo || <em className="text-gray-400">Sin asignar</em>}</span>
                 </div>
+                {g.ayudantes_extra?.map((ae, idx) => (
+                  <div key={ae.id || idx} className="flex items-center gap-2">
+                    <span className="bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full">Ayud. {idx + 3}</span>
+                    <span className="text-gray-600">{ae.ayudante?.nombre_completo || <em className="text-gray-400">Sin asignar</em>}</span>
+                  </div>
+                ))}
               </div>
+
               <button onClick={() => toggleChecklist(g)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${g.ayudantes_checklist ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
                 <span>Checklist para ayudantes</span>
@@ -167,6 +199,8 @@ const GruposPage = () => {
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
+
+              {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del grupo *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre ? 'border-red-400' : 'border-gray-300'}`}
@@ -174,6 +208,8 @@ const GruposPage = () => {
                   {...register('nombre', { required: 'El nombre es requerido' })} />
                 {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
               </div>
+
+              {/* Reunión */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Reunión *</label>
                 <select className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.reunion_id ? 'border-red-400' : 'border-gray-300'}`}
@@ -183,6 +219,8 @@ const GruposPage = () => {
                 </select>
                 {errors.reunion_id && <p className="text-red-500 text-xs mt-1">{errors.reunion_id.message}</p>}
               </div>
+
+              {/* Rango de edades */}
               <div className="grid grid-cols-2 gap-4">
                 {[{ name: 'edad_min', label: 'Edad mínima *' }, { name: 'edad_max', label: 'Edad máxima *' }].map(({ name, label }) => (
                   <div key={name}>
@@ -190,16 +228,16 @@ const GruposPage = () => {
                     <input type="number" min={0} max={17}
                       className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors[name] ? 'border-red-400' : 'border-gray-300'}`}
                       {...register(name, {
-                        required: 'Requerido',
-                        valueAsNumber: true,
-                        min: { value: 0, message: 'Mínimo 0' },
-                        max: { value: 17, message: 'Máximo 17' },
+                        required: 'Requerido', valueAsNumber: true,
+                        min: { value: 0, message: 'Mínimo 0' }, max: { value: 17, message: 'Máximo 17' },
                         validate: v => Number.isInteger(v) || 'Debe ser entero',
                       })} />
                     {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name].message}</p>}
                   </div>
                 ))}
               </div>
+
+              {/* Docente */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Docente / Líder</label>
                 <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -208,6 +246,8 @@ const GruposPage = () => {
                   {docentes.map(d => <option key={d.id} value={d.id}>{d.nombre_completo}</option>)}
                 </select>
               </div>
+
+              {/* Ayudante 1 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ayudante / Colaborador 1</label>
                 <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -216,6 +256,8 @@ const GruposPage = () => {
                   {ayudantes.map(a => <option key={a.id} value={a.id}>{a.nombre_completo}</option>)}
                 </select>
               </div>
+
+              {/* Ayudante 2 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ayudante / Colaborador 2</label>
                 <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -224,6 +266,34 @@ const GruposPage = () => {
                   {ayudantes.map(a => <option key={a.id} value={a.id}>{a.nombre_completo}</option>)}
                 </select>
               </div>
+
+              {/* Ayudantes extra dinámicos */}
+              {ayudantesExtra.map((val, idx) => (
+                <div key={idx}>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Ayudante / Colaborador {idx + 3}</label>
+                    <button type="button" onClick={() => quitarAyudanteExtra(idx)}
+                      className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+                      <FiX size={12} /> Quitar
+                    </button>
+                  </div>
+                  <select
+                    value={val}
+                    onChange={e => cambiarAyudanteExtra(idx, e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">Sin asignar</option>
+                    {ayudantes.map(a => <option key={a.id} value={a.id}>{a.nombre_completo}</option>)}
+                  </select>
+                </div>
+              ))}
+
+              {/* Botón agregar más ayudantes */}
+              <button type="button" onClick={agregarAyudanteExtra}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-primary-400 hover:text-primary-600 transition">
+                <FiUserPlus size={15} /> Agregar otro ayudante / colaborador
+              </button>
+
+              {/* Checklist ayudantes */}
               <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl">
                 <input type="checkbox" className="w-4 h-4 rounded text-primary-600"
                   {...register('ayudantes_checklist')} />
@@ -232,6 +302,7 @@ const GruposPage = () => {
                   <p className="text-xs text-gray-400">Los ayudantes podrán marcar asistencia en este grupo</p>
                 </div>
               </label>
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
                 <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
