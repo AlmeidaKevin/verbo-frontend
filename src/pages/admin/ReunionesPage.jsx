@@ -10,25 +10,13 @@ const DescripcionTexto = ({ texto }) => {
   const LIMITE = 120;
   const esCortable = texto.length > LIMITE || texto.includes('\n');
   const primerSalto = texto.indexOf('\n');
-  const debeCortar = !expandido && esCortable && (
-    texto.length > LIMITE || (primerSalto !== -1 && primerSalto < LIMITE)
-  );
-
-  const textoVisible = debeCortar
-    ? texto.slice(0, Math.min(LIMITE, primerSalto !== -1 ? primerSalto : LIMITE))
-    : texto;
-
+  const debeCortar = !expandido && esCortable && (texto.length > LIMITE || (primerSalto !== -1 && primerSalto < LIMITE));
+  const textoVisible = debeCortar ? texto.slice(0, Math.min(LIMITE, primerSalto !== -1 ? primerSalto : LIMITE)) : texto;
   return (
     <div className="mt-2">
-      <p className="text-gray-500 text-xs whitespace-pre-wrap leading-relaxed">
-        {textoVisible}
-        {debeCortar && '...'}
-      </p>
+      <p className="text-gray-500 text-xs whitespace-pre-wrap leading-relaxed">{textoVisible}{debeCortar && '...'}</p>
       {esCortable && (
-        <button
-          onClick={() => setExpandido(p => !p)}
-          className="text-primary-600 text-xs font-medium mt-1 hover:underline"
-        >
+        <button onClick={() => setExpandido(p => !p)} className="text-primary-600 text-xs font-medium mt-1 hover:underline">
           {expandido ? 'Ver menos' : 'Ver más'}
         </button>
       )}
@@ -36,13 +24,11 @@ const DescripcionTexto = ({ texto }) => {
   );
 };
 
-
 const ReunionesPage = () => {
   const [reuniones, setReuniones] = useState([]);
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
-
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   useEffect(() => { cargar(); }, []);
@@ -58,7 +44,8 @@ const ReunionesPage = () => {
 
   const abrirModal = (reunion = null) => {
     setEditando(reunion);
-    reset(reunion ? { nombre: reunion.nombre, hora_inicio: reunion.hora_inicio, hora_fin: reunion.hora_fin, descripcion: reunion.descripcion || '' }
+    reset(reunion
+      ? { nombre: reunion.nombre, hora_inicio: reunion.hora_inicio, hora_fin: reunion.hora_fin, descripcion: reunion.descripcion || '' }
       : { nombre: '', hora_inicio: '', hora_fin: '', descripcion: '' });
     setModal(true);
   };
@@ -66,9 +53,7 @@ const ReunionesPage = () => {
   const cerrar = () => { setModal(false); setEditando(null); };
 
   const onSubmit = async (datos) => {
-    if (datos.hora_inicio >= datos.hora_fin) {
-      return toast.error('La hora de inicio debe ser menor a la hora de fin');
-    }
+    if (datos.hora_inicio >= datos.hora_fin) return toast.error('La hora de inicio debe ser menor a la hora de fin');
     setCargando(true);
     try {
       if (editando) {
@@ -81,9 +66,8 @@ const ReunionesPage = () => {
         toast.success('Reunión creada');
       }
       cerrar();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al guardar');
-    } finally { setCargando(false); }
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar'); }
+    finally { setCargando(false); }
   };
 
   const eliminar = async (id) => {
@@ -97,10 +81,21 @@ const ReunionesPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Reuniones</h1>
+      {/* Banner */}
+      <div className="relative rounded-2xl overflow-hidden p-6 flex items-center justify-between gap-4"
+        style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white" style={{ transform: 'translate(30%,-30%)' }} />
+        </div>
+        <div className="relative">
+          <h1 className="text-xl font-bold text-white">Reuniones</h1>
+          <p className="text-sm mt-0.5" style={{ color: '#9EC5D0' }}>
+            {reuniones.length} reunión{reuniones.length !== 1 ? 'es' : ''} configurada{reuniones.length !== 1 ? 's' : ''}
+          </p>
+        </div>
         <button onClick={() => abrirModal()}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
+          className="relative flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition shrink-0"
+          style={{ background: '#C8A96B', color: '#112C36' }}>
           <FiPlus size={18} /> Nueva Reunión
         </button>
       </div>
@@ -110,36 +105,59 @@ const ReunionesPage = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reuniones.map(r => (
-            <div key={r.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                  <FiClock className="text-primary-600" size={20} />
+            <div key={r.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: '#EEF4F6' }}>
+                  <FiClock className="text-primary-600" size={22} />
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                   <button onClick={() => abrirModal(r)} className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"><FiEdit2 size={15} /></button>
                   <button onClick={() => eliminar(r.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={15} /></button>
                 </div>
               </div>
-              <h3 className="font-semibold text-gray-800 mb-1">{r.nombre}</h3>
-              <p className="text-primary-600 font-medium text-sm">{r.hora_inicio} – {r.hora_fin}</p>
+              <h3 className="font-bold text-gray-800 mb-1">{r.nombre}</h3>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                style={{ background: '#EEF4F6', color: '#1F4E5F' }}>
+                <FiClock size={11} /> {r.hora_inicio} – {r.hora_fin}
+              </div>
               {r.descripcion && <DescripcionTexto texto={r.descripcion} />}
-              {r.grupos?.length > 0 && (
-                <p className="text-xs text-gray-400 mt-3">{r.grupos.length} grupo(s) asignado(s)</p>
-              )}
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                {r.grupos?.length > 0
+                  ? <span className="text-xs text-gray-500">{r.grupos.length} grupo(s) asignado(s)</span>
+                  : <span className="text-xs text-gray-400">Sin grupos asignados</span>}
+                <div className="flex gap-1">
+                  <button onClick={() => abrirModal(r)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"><FiEdit2 size={13} /></button>
+                  <button onClick={() => eliminar(r.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={13} /></button>
+                </div>
+              </div>
             </div>
           ))}
           {reuniones.length === 0 && (
-            <div className="col-span-3 text-center py-12 text-gray-400">
-              No hay reuniones creadas aún
+            <div className="col-span-3 bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#EEF4F6' }}>
+                <FiClock size={28} className="text-primary-400" />
+              </div>
+              <p className="text-gray-600 font-semibold">No hay reuniones creadas aún</p>
+              <p className="text-gray-400 text-sm mt-1">Crea la primera reunión para comenzar</p>
+              <button onClick={() => abrirModal()}
+                className="mt-4 flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl text-white mx-auto"
+                style={{ background: '#1F4E5F' }}>
+                <FiPlus size={16} /> Crear primera reunión
+              </button>
             </div>
           )}
         </div>
       )}
+
       {modal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">{editando ? 'Editar Reunión' : 'Nueva Reunión'}</h2>
+              <div>
+                <h2 className="font-bold text-gray-800">{editando ? 'Editar Reunión' : 'Nueva Reunión'}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Configura el horario de la reunión</p>
+              </div>
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
@@ -166,7 +184,7 @@ const ReunionesPage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                <textarea rows={2} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+                <textarea rows={3} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Descripción opcional..."
                   {...register('descripcion')} />
               </div>
