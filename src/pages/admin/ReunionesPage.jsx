@@ -178,7 +178,8 @@ const ReunionesPage = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
