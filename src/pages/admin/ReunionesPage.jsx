@@ -144,7 +144,7 @@ const ReunionesPage = () => {
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la reunión111 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la reunión *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Ej: Reunión 1"
                   {...register('nombre', { required: 'El nombre es requerido' })} />
