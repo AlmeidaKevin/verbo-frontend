@@ -51,7 +51,7 @@ const GruposPage = () => {
       ayudantes_checklist: grupo.ayudantes_checklist || false,
     } : {
       nombre: '', reunion_id: '', docente_id: '', ayudante1_id: '', ayudante2_id: '',
-      edad_min: 1, edad_max: 5, ayudantes_checklist: false,
+      edad_min: 0, edad_max: '', ayudantes_checklist: false,
     });
 
     // Cargar ayudantes extra si está editando
