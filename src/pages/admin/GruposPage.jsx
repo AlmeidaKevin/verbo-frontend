@@ -162,7 +162,7 @@ const GruposPage = () => {
       )}
 
       {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" style=" margin-top: 0px;">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl my-8">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="font-bold text-gray-800">{editando ? 'Editar Grupo' : 'Nuevo Grupo'}</h2>
