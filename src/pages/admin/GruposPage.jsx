@@ -225,11 +225,11 @@ const GruposPage = () => {
                 {[{ name: 'edad_min', label: 'Edad mínima *' }, { name: 'edad_max', label: 'Edad máxima *' }].map(({ name, label }) => (
                   <div key={name}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                    <input type="number" min={0} max={17}
+                    <input type="number" min={0}
                       className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors[name] ? 'border-red-400' : 'border-gray-300'}`}
                       {...register(name, {
                         required: 'Requerido', valueAsNumber: true,
-                        min: { value: 0, message: 'Mínimo 0' }, max: { value: 17, message: 'Máximo 17' },
+                        min: { value: 0, message: 'Mínimo 0' },
                         validate: v => Number.isInteger(v) || 'Debe ser entero',
                       })} />
                     {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name].message}</p>}
