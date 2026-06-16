@@ -127,7 +127,7 @@ const ReportesPage = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['Fecha', 'Registrado por', 'Reunión', 'Grupo', 'Rango edad', 'Primer ingreso', 'Último ingreso', 'Estado', 'Acciones'].map(h => (
+                  {['Fecha', 'Reunión', 'Grupo', 'Rango edad', 'Primer ingreso', 'Último ingreso', 'Registrado por', 'Estado', 'Acciones'].map(h => (
                     <th key={h} className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
