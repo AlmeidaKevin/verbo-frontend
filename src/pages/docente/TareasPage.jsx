@@ -1,26 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiTrash2, FiEdit2, FiCpu, FiChevronRight, FiPaperclip, FiX, FiLoader, FiBookOpen } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit2, FiCpu, FiChevronRight, FiPaperclip, FiX, FiLoader, FiBookOpen, FiFilter, FiClock, FiCalendar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
 const TareasPage = () => {
   const [tareas, setTareas] = useState([]);
+  const [tareasFiltradas, setTareasFiltradas] = useState([]);
   const [reuniones, setReuniones] = useState([]);
   const [grupos, setGrupos] = useState([]);
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [archivos, setArchivos] = useState([]);
   const [cargando, setCargando] = useState(false);
+
+  // Filtros
+  const [filtroReunion, setFiltroReunion] = useState('');
+  const [filtroGrupo, setFiltroGrupo] = useState('');
+  const [filtroFecha, setFiltroFecha] = useState('');
+
+  // IA
   const [descIA, setDescIA] = useState('');
   const [iaActiva, setIaActiva] = useState(false);
   const [iaCargando, setIaCargando] = useState(false);
   const [iaIndice, setIaIndice] = useState(0);
   const [iaResultado, setIaResultado] = useState(null);
+
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
   useEffect(() => { cargarDatos(); }, []);
+
+  // Aplicar filtros cuando cambian
+  useEffect(() => {
+    let resultado = [...tareas];
+    if (filtroReunion) resultado = resultado.filter(t => t.reunion_id === filtroReunion || t.reunion?.id === filtroReunion);
+    if (filtroGrupo) resultado = resultado.filter(t => t.grupo_id === filtroGrupo || t.grupo?.id === filtroGrupo);
+    if (filtroFecha) resultado = resultado.filter(t => t.created_at?.slice(0, 10) === filtroFecha);
+    setTareasFiltradas(resultado);
+  }, [tareas, filtroReunion, filtroGrupo, filtroFecha]);
 
   const cargarDatos = async () => {
     setCargando(true);
@@ -33,10 +51,15 @@ const TareasPage = () => {
     finally { setCargando(false); }
   };
 
+  const limpiarFiltros = () => { setFiltroReunion(''); setFiltroGrupo(''); setFiltroFecha(''); };
+  const hayFiltros = filtroReunion || filtroGrupo || filtroFecha;
+
   const abrirModal = (tarea = null) => {
     setEditando(tarea); setArchivos([]); setIaActiva(false); setIaResultado(null); setDescIA('');
-    if (tarea) { setValue('titulo', tarea.titulo); setValue('descripcion', tarea.descripcion); setValue('reunion_id', tarea.reunion_id || ''); setValue('grupo_id', tarea.grupo_id || ''); }
-    else { reset(); }
+    if (tarea) {
+      setValue('titulo', tarea.titulo); setValue('descripcion', tarea.descripcion);
+      setValue('reunion_id', tarea.reunion_id || ''); setValue('grupo_id', tarea.grupo_id || '');
+    } else { reset(); }
     setModal(true);
   };
 
@@ -46,7 +69,8 @@ const TareasPage = () => {
     setCargando(true);
     try {
       const formData = new FormData();
-      formData.append('titulo', datos.titulo); formData.append('descripcion', datos.descripcion);
+      formData.append('titulo', datos.titulo);
+      formData.append('descripcion', datos.descripcion);
       if (datos.reunion_id) formData.append('reunion_id', datos.reunion_id);
       if (datos.grupo_id) formData.append('grupo_id', datos.grupo_id);
       if (iaResultado) formData.append('generado_por_ia', 'true');
@@ -108,7 +132,7 @@ const TareasPage = () => {
         <div className="relative">
           <h1 className="text-xl font-bold text-white">Tareas / Deberes</h1>
           <p className="text-sm mt-0.5 text-indigo-300">
-            {tareas.length} tarea{tareas.length !== 1 ? 's' : ''} publicada{tareas.length !== 1 ? 's' : ''}
+            {tareasFiltradas.length} de {tareas.length} tarea{tareas.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button onClick={() => abrirModal()}
@@ -117,30 +141,73 @@ const TareasPage = () => {
         </button>
       </div>
 
+      {/* Filtros */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <FiFilter size={14} className="text-indigo-600" /> Filtrar tareas
+          </h2>
+          {hayFiltros && (
+            <button onClick={limpiarFiltros} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+              <FiX size={12} /> Limpiar
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Reunión</label>
+            <select value={filtroReunion} onChange={e => setFiltroReunion(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Todas</option>
+              {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Grupo</label>
+            <select value={filtroGrupo} onChange={e => setFiltroGrupo(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Todos</option>
+              {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Fecha</label>
+            <input type="date" value={filtroFecha} onChange={e => setFiltroFecha(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+      </div>
+
       {cargando && !modal ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" /></div>
-      ) : tareas.length === 0 ? (
+      ) : tareasFiltradas.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-indigo-50">
             <FiBookOpen size={28} className="text-indigo-400" />
           </div>
-          <p className="text-gray-600 font-semibold">No hay tareas publicadas aún</p>
-          <p className="text-gray-400 text-sm mt-1">Crea la primera tarea para tus alumnos</p>
-          <button onClick={() => abrirModal()}
-            className="mt-4 inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl text-white bg-indigo-700 hover:bg-indigo-800 transition">
-            <FiPlus size={16} /> Nueva tarea
-          </button>
+          <p className="text-gray-600 font-semibold">
+            {hayFiltros ? 'No hay tareas con ese filtro' : 'No hay tareas publicadas aún'}
+          </p>
+          <p className="text-gray-400 text-sm mt-1">
+            {hayFiltros ? 'Prueba cambiando los filtros' : 'Crea la primera tarea para tus alumnos'}
+          </p>
+          {!hayFiltros && (
+            <button onClick={() => abrirModal()}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl text-white bg-indigo-700 hover:bg-indigo-800 transition">
+              <FiPlus size={16} /> Nueva tarea
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {tareas.map(tarea => (
+          {tareasFiltradas.map(tarea => (
             <div key={tarea.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition group">
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
                   <FiBookOpen size={18} className="text-indigo-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1.5">
                     <h3 className="font-bold text-gray-800 text-sm truncate">{tarea.titulo}</h3>
                     {tarea.generado_por_ia && (
                       <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
@@ -148,9 +215,25 @@ const TareasPage = () => {
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {tarea.reunion && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{tarea.reunion.nombre}</span>}
-                    {tarea.grupo && <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">{tarea.grupo.nombre}</span>}
+                  {/* Reunión y grupo — siempre visibles */}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {tarea.reunion ? (
+                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                        <FiClock size={9} /> {tarea.reunion.nombre}
+                        {tarea.reunion.hora_inicio && (
+                          <span className="opacity-70">· {tarea.reunion.hora_inicio}–{tarea.reunion.hora_fin}</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Todas las reuniones</span>
+                    )}
+                    {tarea.grupo ? (
+                      <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                        👥 {tarea.grupo.nombre}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Todos los grupos</span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-500 line-clamp-2">{tarea.descripcion}</p>
                 </div>
@@ -159,6 +242,7 @@ const TareasPage = () => {
                   <button onClick={() => eliminar(tarea.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"><FiTrash2 size={14} /></button>
                 </div>
               </div>
+
               {tarea.archivos?.length > 0 && (
                 <div className="pt-3 border-t border-gray-100">
                   <p className="text-xs text-gray-400 mb-1 flex items-center gap-1"><FiPaperclip size={11} /> {tarea.archivos.length} archivo(s)</p>
@@ -172,12 +256,18 @@ const TareasPage = () => {
                   </div>
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-3">{new Date(tarea.created_at).toLocaleDateString('es-EC')}</p>
+
+              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <p className="text-xs text-gray-400 flex items-center gap-1">
+                  <FiCalendar size={10} /> {new Date(tarea.created_at).toLocaleDateString('es-EC')}
+                </p>
+              </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Modal */}
       {modal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -239,14 +329,14 @@ const TareasPage = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Reunión</label>
                       <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" {...register('reunion_id')}>
                         <option value="">Todas las reuniones</option>
-                        {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+                        {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre} ({r.hora_inicio}–{r.hora_fin})</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
                       <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" {...register('grupo_id')}>
                         <option value="">Todos los grupos</option>
-                        {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+                        {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.edad_min}–{g.edad_max} años)</option>)}
                       </select>
                     </div>
                   </div>
