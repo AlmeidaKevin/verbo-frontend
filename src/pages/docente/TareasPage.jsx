@@ -158,15 +158,15 @@ const TareasPage = () => {
             <label className="block text-xs font-medium text-gray-500 mb-1">Reunión</label>
             <select value={filtroReunion} onChange={e => setFiltroReunion(e.target.value)}
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="">Todas</option>
-              {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              <option value="">Todas las reuniones</option>
+              {reuniones.map(r => <option key={r.id} value={r.id}>{r.nombre} ({r.hora_inicio}–{r.hora_fin})</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Grupo</label>
             <select value={filtroGrupo} onChange={e => setFiltroGrupo(e.target.value)}
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="">Todos</option>
+              <option value="">Todos los grupos</option>
               {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
             </select>
           </div>
