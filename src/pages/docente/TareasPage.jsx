@@ -229,7 +229,7 @@ const TareasPage = () => {
                     )}
                     {tarea.grupo ? (
                       <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
-                        👥 {tarea.grupo.nombre.hora_inicio.hora_fin}
+                        👥 {tarea.grupo.nombre}
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Todos los grupos</span>
