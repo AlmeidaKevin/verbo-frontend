@@ -363,7 +363,7 @@ const TareasPage = () => {
                 )}
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={cerrarModal} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
-                  <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
+                  <button type="submit" disabled={cargando} className="flex-1 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
                     {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Publicar Tarea'}
                   </button>
                 </div>
