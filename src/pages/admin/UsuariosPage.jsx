@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiEdit2, FiX, FiEye, FiEyeOff, FiSearch, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiX, FiEye, FiEyeOff, FiSearch, FiUsers, FiInfo } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -10,6 +10,44 @@ const ROLES = [
   { value: 'docente', label: 'Docente / Líder' },
   { value: 'ayudante', label: 'Ayudante / Colaborador' },
 ];
+
+const ESTADOS = [
+  { value: 'activada',     label: 'Activada',     color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500',
+    info: 'El usuario verificó su cuenta mediante el correo enviado y puede iniciar sesión normalmente.' },
+  { value: 'pendiente',    label: 'Pendiente',    color: 'bg-amber-100 text-amber-700',    dot: 'bg-amber-400',
+    info: 'El usuario recibió el correo de verificación pero aún no hizo clic en el enlace de verificación.' },
+  { value: 'desactivada',  label: 'Desactivada',  color: 'bg-red-100 text-red-700',        dot: 'bg-red-500',
+    info: 'El usuario no puede iniciar sesión. Al intentar hacerlo, verá el mensaje "Tu cuenta ha sido desactivada".' },
+];
+
+const estadoInfo = (estado) => ESTADOS.find(e => e.value === estado) || ESTADOS[1];
+
+// Tooltip flotante
+const InfoTooltip = ({ texto }) => {
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const mostrar = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 6, left: Math.max(8, rect.right - 224) });
+    }
+  };
+  return (
+    <span className="inline-flex shrink-0">
+      <button ref={btnRef} type="button" onMouseEnter={mostrar} onMouseLeave={() => setPos(null)}
+        className="text-gray-400 hover:text-primary-600 transition ml-1">
+        <FiInfo size={13} />
+      </button>
+      {pos && createPortal(
+        <span className="fixed w-56 bg-gray-800 text-white text-xs rounded-xl px-3 py-2 shadow-2xl leading-relaxed pointer-events-none"
+          style={{ top: pos.top, left: pos.left, zIndex: 99999 }}>
+          {texto}
+        </span>,
+        document.body
+      )}
+    </span>
+  );
+};
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -47,25 +85,29 @@ const UsuariosPage = () => {
     setCargando(true);
     try {
       if (editando) {
-        const { data } = await api.put(`/usuarios/${editando.id}`, { nombre_completo: datos.nombre_completo, cedula: datos.cedula, email: datos.email, telefono: datos.telefono, rol: datos.rol });
-        setUsuarios(prev => prev.map(u => u.id === editando.id ? data.usuario : u));
+        const { data } = await api.put(`/usuarios/${editando.id}`, {
+          nombre_completo: datos.nombre_completo, cedula: datos.cedula,
+          email: datos.email, telefono: datos.telefono, rol: datos.rol,
+        });
+        setUsuarios(prev => prev.map(u => u.id === editando.id ? { ...u, ...data.usuario } : u));
         toast.success('Usuario actualizado');
       } else {
         const { data } = await api.post('/auth/crear-usuario', datos);
         setUsuarios(prev => [data.usuario, ...prev]);
-        toast.success('Usuario creado. Se envió email con credenciales.');
+        toast.success('Usuario creado. Se envió email de verificación.');
       }
       cerrar();
     } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar usuario'); }
     finally { setCargando(false); }
   };
 
-  const toggleActivo = async (usuario) => {
+  const cambiarEstado = async (usuario, nuevoEstado) => {
+    if (usuario.rol === 'admin') return toast.error('No se puede modificar el estado de un administrador');
     try {
-      await api.put(`/usuarios/${usuario.id}`, { activo: !usuario.activo });
-      setUsuarios(prev => prev.map(u => u.id === usuario.id ? { ...u, activo: !u.activo } : u));
-      toast.success(usuario.activo ? 'Usuario desactivado' : 'Usuario activado');
-    } catch { toast.error('Error al cambiar estado'); }
+      const { data } = await api.put(`/usuarios/${usuario.id}`, { estado: nuevoEstado });
+      setUsuarios(prev => prev.map(u => u.id === usuario.id ? { ...u, ...data.usuario } : u));
+      toast.success(`Estado cambiado a "${nuevoEstado}"`);
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al cambiar estado'); }
   };
 
   const usuariosFiltrados = usuarios.filter(u => {
@@ -78,9 +120,20 @@ const UsuariosPage = () => {
   const validarSoloLetras = v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras';
   const validarSoloNumeros = v => /^\d+$/.test(v) || 'Solo se permiten números';
 
-  const activos = usuarios.filter(u => u.activo).length;
+  const activos = usuarios.filter(u => u.estado === 'activada').length;
+  const pendientes = usuarios.filter(u => u.estado === 'pendiente').length;
   const docentes = usuarios.filter(u => u.rol === 'docente').length;
   const ayudantes = usuarios.filter(u => u.rol === 'ayudante').length;
+
+  // Opciones de estado disponibles según si el usuario ya verificó o no
+  const opcionesEstado = (usuario) => {
+    if (usuario.email_verificado) {
+      // Ya verificó → solo puede cambiar a activada o desactivada
+      return ESTADOS.filter(e => e.value !== 'pendiente');
+    }
+    // No verificó → puede cambiar a cualquiera
+    return ESTADOS;
+  };
 
   return (
     <div className="space-y-6">
@@ -92,8 +145,9 @@ const UsuariosPage = () => {
         </div>
         <div className="relative flex-1">
           <h1 className="text-xl font-bold text-white">Usuarios</h1>
-          <div className="flex gap-4 mt-2">
-            <span className="text-xs" style={{ color: '#9EC5D0' }}>{activos} activos</span>
+          <div className="flex flex-wrap gap-4 mt-2">
+            <span className="text-xs" style={{ color: '#9EC5D0' }}>{activos} activados</span>
+            <span className="text-xs" style={{ color: '#9EC5D0' }}>{pendientes} pendientes</span>
             <span className="text-xs" style={{ color: '#9EC5D0' }}>{docentes} docentes</span>
             <span className="text-xs" style={{ color: '#9EC5D0' }}>{ayudantes} ayudantes</span>
           </div>
@@ -135,35 +189,62 @@ const UsuariosPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {usuariosFiltrados.map(u => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {u.foto_url
-                          ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                          : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold">{u.nombre_completo[0]}</div>}
-                        <span className="font-medium text-gray-800">{u.nombre_completo}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{u.cedula}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{u.telefono}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${rolBadge(u.rol)}`}>
-                        {ROLES.find(r => r.value === u.rol)?.label || u.rol}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => toggleActivo(u)}
-                        className={`text-xs px-2.5 py-1 rounded-full font-medium transition ${u.activo ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                        {u.activo ? 'Activo' : 'Inactivo'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => abrirModal(u)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"><FiEdit2 size={14} /></button>
-                    </td>
-                  </tr>
-                ))}
+                {usuariosFiltrados.map(u => {
+                  const est = estadoInfo(u.estado || 'pendiente');
+                  const esAdmin = u.rol === 'admin';
+                  return (
+                    <tr key={u.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {u.foto_url
+                            ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold">{u.nombre_completo[0]}</div>}
+                          <span className="font-medium text-gray-800">{u.nombre_completo}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">{u.cedula}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">{u.telefono}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${rolBadge(u.rol)}`}>
+                          {ROLES.find(r => r.value === u.rol)?.label || u.rol}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {esAdmin ? (
+                          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            {/* Selector de estado */}
+                            <div className="relative group">
+                              <button className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                                {est.label}
+                              </button>
+                              {/* Dropdown al hover */}
+                              <div className="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded-xl shadow-xl z-10 min-w-[140px] overflow-hidden">
+                                {opcionesEstado(u).map(op => (
+                                  <button key={op.value} onClick={() => cambiarEstado(u, op.value)}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold' : ''}`}>
+                                    <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
+                                    {op.label}
+                                    {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <InfoTooltip texto={est.info} />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => abrirModal(u)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
+                          <FiEdit2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {usuariosFiltrados.length === 0 && (
@@ -176,37 +257,55 @@ const UsuariosPage = () => {
 
           {/* Mobile */}
           <div className="md:hidden space-y-3">
-            {usuariosFiltrados.map(u => (
-              <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {u.foto_url
-                      ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                      : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">{u.nombre_completo[0]}</div>}
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{u.nombre_completo}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${rolBadge(u.rol)}`}>{ROLES.find(r => r.value === u.rol)?.label}</span>
+            {usuariosFiltrados.map(u => {
+              const est = estadoInfo(u.estado || 'pendiente');
+              const esAdmin = u.rol === 'admin';
+              return (
+                <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {u.foto_url
+                        ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">{u.nombre_completo[0]}</div>}
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">{u.nombre_completo}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${rolBadge(u.rol)}`}>{ROLES.find(r => r.value === u.rol)?.label}</span>
+                      </div>
                     </div>
+                    <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600"><FiEdit2 size={16} /></button>
                   </div>
-                  <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600"><FiEdit2 size={16} /></button>
+                  <div className="mt-3 space-y-1 text-xs text-gray-500">
+                    <p>📧 {u.email}</p>
+                    <p>🪪 {u.cedula} · 📞 {u.telefono}</p>
+                  </div>
+                  {!esAdmin && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {opcionesEstado(u).map(op => (
+                        <button key={op.value} onClick={() => cambiarEstado(u, op.value)}
+                          className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 transition ${
+                            op.value === u.estado ? op.color + ' ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${op.dot}`} />
+                          {op.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="mt-3 space-y-1 text-xs text-gray-500">
-                  <p>📧 {u.email}</p>
-                  <p>🪪 {u.cedula} · 📞 {u.telefono}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
 
+      {/* Modal crear/editar */}
       {modal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
               <div>
                 <h2 className="font-bold text-gray-800">{editando ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{editando ? 'Actualiza la información del usuario' : 'Completa los datos para crear el usuario'}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{editando ? 'Actualiza la información del usuario' : 'Se enviará un correo de verificación'}</p>
               </div>
               <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
@@ -241,9 +340,15 @@ const UsuariosPage = () => {
                       placeholder="Mínimo 8 caracteres"
                       {...register('password', {
                         required: 'Requerida', minLength: { value: 8, message: 'Mínimo 8 caracteres' },
-                        validate: { mayus: v => /[A-Z]/.test(v) || 'Necesita una mayúscula', minus: v => /[a-z]/.test(v) || 'Necesita una minúscula', num: v => /\d/.test(v) || 'Necesita un número', especial: v => /[!@#$%^&*(),.?":{}|<>]/.test(v) || 'Necesita un carácter especial' },
+                        validate: {
+                          mayus: v => /[A-Z]/.test(v) || 'Necesita una mayúscula',
+                          minus: v => /[a-z]/.test(v) || 'Necesita una minúscula',
+                          num: v => /\d/.test(v) || 'Necesita un número',
+                          especial: v => /[!@#$%^&*(),.?":{}|<>]/.test(v) || 'Necesita un carácter especial',
+                        },
                       })} />
-                    <button type="button" onClick={() => setVerPass(!verPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <button type="button" onClick={() => setVerPass(!verPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {verPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                     </button>
                   </div>
