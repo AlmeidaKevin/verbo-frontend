@@ -74,6 +74,7 @@ function App() {
           <Route path="/login" element={<RutaPublica><LoginPage /></RutaPublica>} />
           <Route path="/olvide-password" element={<OlvidePasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verificar-cuenta/:token" element={<VerificarCuentaPage />} />
 
           {/* Redirect por rol */}
           <Route path="/dashboard" element={<RutaProtegida><DashboardRedirect /></RutaProtegida>} />
