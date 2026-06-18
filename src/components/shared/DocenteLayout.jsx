@@ -136,15 +136,25 @@ const buildLayout = (navItems, rolLabel, color) => {
 
         {/* Sidebar DESKTOP */}
         <aside className={`hidden lg:flex flex-col ${c.bg800} min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}>
-          <div className={`${c.borderB} flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
-            {!colapsado && <LogoHeader />}
-            {colapsado && <img src="/favicon_verbo.png" alt="Logo" className="w-9 h-9 rounded-full object-cover" />}
-            <button onClick={() => setColapsado(p => !p)}
-              className={`${c.text300} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}
-              title={colapsado ? 'Expandir menú' : 'Colapsar menú'}>
-              {colapsado ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
-            </button>
-          </div>
+          {colapsado ? (
+            <div className={`${c.borderB} flex flex-col items-center py-4 px-2 gap-3`}>
+              <img src="/favicon_verbo.png" alt="Logo" className="w-9 h-9 rounded-full object-cover" />
+              <button onClick={() => setColapsado(p => !p)}
+                className={`${c.text300} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}
+                title="Expandir menú">
+                <FiChevronRight size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className={`${c.borderB} flex items-center justify-between p-5`}>
+              <LogoHeader />
+              <button onClick={() => setColapsado(p => !p)}
+                className={`${c.text300} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}
+                title="Colapsar menú">
+                <FiChevronLeft size={16} />
+              </button>
+            </div>
+          )}
 
           <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-2">
             {navItems.map(item => <NavItem key={item.to} {...item} />)}
