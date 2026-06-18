@@ -259,7 +259,7 @@ const TareasPage = () => {
 
               <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
                 <p className="text-xs text-gray-400 flex items-center gap-1">
-                  <FiCalendar size={10} /> {new Date(tarea.created_at).toLocaleDateString('es-EC')}
+                  <FiCalendar size={10} /> {new Date(tarea.created_at).toLocaleString('es-EC')}
                 </p>
               </div>
             </div>
