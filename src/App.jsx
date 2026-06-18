@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import OlvidePasswordPage from './pages/auth/OlvidePasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerificarCuentaPage from './pages/auth/VerificarCuentaPage';
 
 // Admin
 import AdminLayout from './components/shared/AdminLayout';
