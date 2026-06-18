@@ -28,7 +28,7 @@ const AdminLayout = () => {
     <div className="flex flex-col h-full bg-primary-800">
       <div className="p-6 border-b border-primary-700">
         <div className="flex items-center gap-3">
-          <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
+          <span className="text-2xl">✝️</span>
           <div>
             <p className="text-white font-bold text-sm leading-tight">Verbo Mañosca</p>
             <p className="text-primary-300 text-xs">Escuela Dominical</p>
@@ -72,8 +72,17 @@ const AdminLayout = () => {
         className={`hidden lg:flex flex-col bg-primary-800 min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}
       >
         {/* Logo / botón colapsar */}
-        <div className={`border-b border-primary-700 flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
-          {!colapsado && (
+        {colapsado ? (
+          <div className="border-b border-primary-700 flex flex-col items-center py-4 px-2 gap-3">
+            <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
+            <button onClick={() => setColapsado(p => !p)}
+              className="text-primary-300 hover:text-white hover:bg-primary-700 rounded-lg p-1.5 transition"
+              title="Expandir menú">
+              <FiChevronRight size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="border-b border-primary-700 flex items-center justify-between p-5">
             <div className="flex items-center gap-3">
               <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
               <div>
@@ -81,16 +90,13 @@ const AdminLayout = () => {
                 <p className="text-primary-300 text-xs">Escuela Dominical</p>
               </div>
             </div>
-          )}
-          {colapsado && <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />}
-          <button
-            onClick={() => setColapsado(p => !p)}
-            className={`text-primary-300 hover:text-white hover:bg-primary-700 rounded-lg p-1.5 transition ${colapsado ? 'mt-0' : ''}`}
-            title={colapsado ? 'Expandir menú' : 'Colapsar menú'}
-          >
-            {colapsado ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
-          </button>
-        </div>
+            <button onClick={() => setColapsado(p => !p)}
+              className="text-primary-300 hover:text-white hover:bg-primary-700 rounded-lg p-1.5 transition"
+              title="Colapsar menú">
+              <FiChevronLeft size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-2">
