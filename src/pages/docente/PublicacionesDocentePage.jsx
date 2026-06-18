@@ -1,18 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiPaperclip, FiBell } from 'react-icons/fi';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const PublicacionesDocentePage = () => {
   const [publicaciones, setPublicaciones] = useState([]);
+  const [nuevas, setNuevas] = useState(new Set()); // IDs no vistas al cargar
+  const [animando, setAnimando] = useState(new Set()); // IDs en animación
   const [cargando, setCargando] = useState(true);
+  const marcadoRef = useRef(false);
 
   useEffect(() => {
-    api.get('/publicaciones')
-      .then(r => setPublicaciones(r.data.publicaciones || []))
-      .catch(() => toast.error('Error al cargar publicaciones'))
-      .finally(() => setCargando(false));
+    cargar();
+    return () => { marcadoRef.current = false; };
   }, []);
+
+  const cargar = async () => {
+    try {
+      const { data } = await api.get('/publicaciones');
+      const pubs = data.publicaciones || [];
+      setPublicaciones(pubs);
+
+      // Identificar las no vistas
+      const noVistas = new Set(pubs.filter(p => !p.vista).map(p => p.id));
+      setNuevas(noVistas);
+
+      // Iniciar animación para las nuevas
+      if (noVistas.size > 0) {
+        setAnimando(new Set(noVistas));
+        // Detener animación después de 4 segundos
+        setTimeout(() => setAnimando(new Set()), 4000);
+
+        // Marcar como vistas en el backend
+        if (!marcadoRef.current) {
+          marcadoRef.current = true;
+          await api.post('/publicaciones/marcar-vistas', {
+            publicacion_ids: Array.from(noVistas),
+          });
+        }
+      }
+    } catch { toast.error('Error al cargar publicaciones'); }
+    finally { setCargando(false); }
+  };
 
   return (
     <div className="space-y-6">
@@ -24,9 +53,7 @@ const PublicacionesDocentePage = () => {
         </div>
         <div className="relative">
           <h1 className="text-xl font-bold text-white">Publicaciones</h1>
-          <p className="text-sm mt-0.5 text-indigo-300">
-            Avisos y comunicados del administrador
-          </p>
+          <p className="text-sm mt-0.5 text-indigo-300">Avisos y comunicados del administrador</p>
         </div>
         <div className="relative w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
           <FiBell size={24} className="text-white" />
@@ -34,7 +61,9 @@ const PublicacionesDocentePage = () => {
       </div>
 
       {cargando ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" /></div>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+        </div>
       ) : publicaciones.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-indigo-50">
@@ -45,36 +74,45 @@ const PublicacionesDocentePage = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {publicaciones.map(p => (
-            <div key={p.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
-              <div className="flex items-start gap-3">
-                {p.publicado_por?.foto_url
-                  ? <img src={p.publicado_por.foto_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
-                  : <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
-                      {p.publicado_por?.nombre_completo?.[0]}
+          {publicaciones.map(p => {
+            const esNueva = nuevas.has(p.id);
+            const estaAnimando = animando.has(p.id);
+            return (
+              <div key={p.id} className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition ${esNueva ? 'border-red-200' : 'border-gray-200'}`}>
+                <div className="flex items-start gap-3">
+                  {p.publicado_por?.foto_url
+                    ? <img src={p.publicado_por.foto_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    : <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        {p.publicado_por?.nombre_completo?.[0]}
+                      </div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="text-sm font-semibold text-gray-800">{p.publicado_por?.nombre_completo}</p>
+                      <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('es-EC')}</span>
+                      {esNueva && (
+                        <span className={`text-xs bg-red-500 text-white px-2.5 py-0.5 rounded-full font-semibold ${estaAnimando ? 'animate-pulse' : ''}`}>
+                          Nuevo
+                        </span>
+                      )}
                     </div>
-                }
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-gray-800">{p.publicado_por?.nombre_completo}</p>
-                    <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleString('es-EC')}</span>
+                    <h3 className="font-bold text-gray-800 mt-1">{p.titulo}</h3>
+                    <p className="text-sm text-gray-600 mt-1 whitespace-pre-line leading-relaxed">{p.contenido}</p>
+                    {p.archivos?.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {p.archivos.map((a, i) => (
+                          <a key={i} href={a.url} target="_blank" rel="noreferrer"
+                            className="text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg hover:bg-indigo-100 transition">
+                            <FiPaperclip size={11} /> {a.nombre}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-bold text-gray-800 mt-1">{p.titulo}</h3>
-                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-line leading-relaxed">{p.contenido}</p>
-                  {p.archivos?.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {p.archivos.map((a, i) => (
-                        <a key={i} href={a.url} target="_blank" rel="noreferrer"
-                          className="text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg hover:bg-indigo-100 transition">
-                          <FiPaperclip size={11} /> {a.nombre}
-                        </a>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
