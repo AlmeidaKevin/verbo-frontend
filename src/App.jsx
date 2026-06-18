@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 import OlvidePasswordPage from './pages/auth/OlvidePasswordPage';
@@ -33,6 +34,7 @@ import PublicacionesDocentePage from './pages/docente/PublicacionesDocentePage';
 import AyudanteLayout from './components/shared/AyudanteLayout';
 import AyudanteDashboard from './pages/ayudante/AyudanteDashboard';
 import ChecklistAyudantePage from './pages/ayudante/ChecklistAyudantePage';
+import AvisosAyudantePage from './pages/ayudante/AvisosAyudantePage';
 
 // Público (niños)
 import PaginaPublica from './pages/publico/PaginaPublica';
@@ -104,6 +106,7 @@ function App() {
           <Route path="/ayudante" element={<RutaProtegida roles={['ayudante']}><AyudanteLayout /></RutaProtegida>}>
             <Route path="dashboard" element={<AyudanteDashboard />} />
             <Route path="checklist" element={<ChecklistAyudantePage />} />
+            <Route path="avisos" element={<AvisosAyudantePage />} />
             <Route path="perfil" element={<PerfilPage />} />
           </Route>
 
