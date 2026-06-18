@@ -74,7 +74,7 @@ const InfoTooltip = ({ texto }) => {
       const rect = btnRef.current.getBoundingClientRect();
       setPos({
         top: rect.bottom + 6,
-        left: Math.min(rect.left - 200, window.innerWidth - 240),
+        left: rect.right - 224,
       });
     }
   };
