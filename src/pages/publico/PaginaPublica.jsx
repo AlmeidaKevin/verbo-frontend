@@ -67,7 +67,6 @@ const PaginaPublica = () => {
   };
 
   const limpiarFiltros = () => { setReunionSel(''); setGrupoSel(''); };
-  const limpiarFiltros = () => { setReunionSel(''); setGrupoSel(''); };
   const hayFiltros = reunionSel || grupoSel;
 
   // Filtrar publicaciones según grupo seleccionado:
