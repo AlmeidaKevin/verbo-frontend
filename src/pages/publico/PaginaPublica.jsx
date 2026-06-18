@@ -34,8 +34,8 @@ const PaginaPublica = () => {
 
   // Cargar reuniones y grupos para el filtro
   useEffect(() => {
-    api.get('/reuniones').then(r => setReuniones(r.data.reuniones || [])).catch(() => {});
-    api.get('/grupos').then(r => setGrupos(r.data.grupos || [])).catch(() => {});
+    api.get('/reuniones/publico').then(r => setReuniones(r.data.reuniones || [])).catch(() => {});
+    api.get('/grupos/publico').then(r => setGrupos(r.data.grupos || [])).catch(() => {});
   }, []);
 
   // Filtrar grupos según reunión seleccionada
