@@ -57,7 +57,7 @@ const PublicacionesDocentePage = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-gray-800">{p.publicado_por?.nombre_completo}</p>
-                    <span className="text-xs text-gray-400 mt-2">{new Date(p.created_at).toLocaleString('es-EC')}</span>
+                    <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleString('es-EC')}</span>
                   </div>
                   <h3 className="font-bold text-gray-800 mt-1">{p.titulo}</h3>
                   <p className="text-sm text-gray-600 mt-1 whitespace-pre-line leading-relaxed">{p.contenido}</p>
