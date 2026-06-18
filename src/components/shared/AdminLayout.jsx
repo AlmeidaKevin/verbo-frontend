@@ -73,7 +73,7 @@ const AdminLayout = () => {
       >
         {/* Logo / botón colapsar */}
         {colapsado ? (
-          <div className="border-b border-primary-700 flex items-center justify-center py-5 px-2 gap-2">
+          <div className="border-b border-primary-700 flex flex-col items-center py-4 px-2 gap-3">
             <img src="/favicon_verbo.png" alt="Verbo Mañosca" className="w-9 h-9 rounded-full object-cover" />
             <button onClick={() => setColapsado(p => !p)}
               className="text-primary-300 hover:text-white hover:bg-primary-700 rounded-lg p-1.5 transition"
