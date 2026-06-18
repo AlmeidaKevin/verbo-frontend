@@ -68,14 +68,15 @@ const tipoLabel = (tipo) => TIPOS.find(t => t.value === tipo)?.label || tipo;
 const InfoTooltip = ({ texto }) => {
   const [visible, setVisible] = useState(false);
   return (
-    <span className="relative inline-flex">
+    <span className="relative inline-flex shrink-0">
       <button type="button" onMouseEnter={() => setVisible(true)} onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)} onBlur={() => setVisible(false)}
         className="text-gray-400 hover:text-primary-600 transition">
         <FiInfo size={14} />
       </button>
       {visible && (
-        <span className="absolute left-6 top-0 z-10 w-56 bg-gray-800 text-white text-xs rounded-xl px-3 py-2 shadow-xl leading-relaxed">
+        <span className="fixed z-[99999] w-56 bg-gray-800 text-white text-xs rounded-xl px-3 py-2 shadow-2xl leading-relaxed pointer-events-none"
+          style={{ transform: 'translate(-90%, 20px)' }}>
           {texto}
         </span>
       )}
@@ -286,7 +287,7 @@ const PublicacionesAdminPage = () => {
       {modal && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-[99998]">
               <div>
                 <h2 className="font-bold text-gray-800">{editando ? 'Editar Publicación' : 'Nueva Publicación'}</h2>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -311,8 +312,16 @@ const PublicacionesAdminPage = () => {
                 {errors.contenido && <p className="text-red-500 text-xs mt-1">{errors.contenido.message}</p>}
               </div>
 
-              {/* Selector de tipo — solo al crear */}
-              {!editando && (
+              {/* Selector de tipo — radio al crear, solo lectura al editar */}
+              {editando ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Enviado a</label>
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-sm text-gray-700 flex-1">{tipoLabel(editando.tipo_destinatario)}</span>
+                    <span className="text-xs text-gray-400 italic">No se puede cambiar al editar</span>
+                  </div>
+                </div>
+              ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Enviar a</label>
 
