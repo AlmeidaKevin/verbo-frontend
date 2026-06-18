@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { FiPlus, FiTrash2, FiEdit2, FiX, FiPaperclip, FiSend, FiBell, FiInfo, FiSave } from 'react-icons/fi';
@@ -66,19 +66,33 @@ const tipoLabel = (tipo) => TIPOS.find(t => t.value === tipo)?.label || tipo;
 
 // Tooltip info component
 const InfoTooltip = ({ texto }) => {
-  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+
+  const mostrar = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 6,
+        left: Math.min(rect.left - 200, window.innerWidth - 240),
+      });
+    }
+  };
+
   return (
     <span className="relative inline-flex shrink-0">
-      <button type="button" onMouseEnter={() => setVisible(true)} onMouseLeave={() => setVisible(false)}
-        onFocus={() => setVisible(true)} onBlur={() => setVisible(false)}
+      <button ref={btnRef} type="button"
+        onMouseEnter={mostrar} onMouseLeave={() => setPos(null)}
+        onFocus={mostrar} onBlur={() => setPos(null)}
         className="text-gray-400 hover:text-primary-600 transition">
         <FiInfo size={14} />
       </button>
-      {visible && (
-        <span className="fixed z-[99999] w-56 bg-gray-800 text-white text-xs rounded-xl px-3 py-2 shadow-2xl leading-relaxed pointer-events-none"
-          style={{ transform: 'translate(-90%, 20px)' }}>
+      {pos && createPortal(
+        <span className="fixed w-56 bg-gray-800 text-white text-xs rounded-xl px-3 py-2 shadow-2xl leading-relaxed pointer-events-none"
+          style={{ top: pos.top, left: pos.left, zIndex: 99999 }}>
           {texto}
-        </span>
+        </span>,
+        document.body
       )}
     </span>
   );
