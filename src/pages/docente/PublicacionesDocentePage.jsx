@@ -89,7 +89,7 @@ const PublicacionesDocentePage = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <p className="text-sm font-semibold text-gray-800">{p.publicado_por?.nombre_completo}</p>
-                      <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('es-EC')}</span>
+                      <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleString('es-EC')}</span>
                       {esNueva && (
                         <span className={`text-xs bg-red-500 text-white px-2.5 py-0.5 rounded-full font-semibold ${estaAnimando ? 'animate-pulse' : ''}`}>
                           Nuevo
