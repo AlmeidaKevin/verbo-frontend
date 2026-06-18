@@ -137,7 +137,7 @@ const buildLayout = (navItems, rolLabel, color) => {
         {/* Sidebar DESKTOP */}
         <aside className={`hidden lg:flex flex-col ${c.bg800} min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}>
           {colapsado ? (
-            <div className={`${c.borderB} flex items-center justify-center py-5 px-2 gap-2`}>
+            <div className={`${c.borderB} flex flex-col items-center py-4 px-2 gap-3`}>
               <img src="/favicon_verbo.png" alt="Logo" className="w-9 h-9 rounded-full object-cover" />
               <button onClick={() => setColapsado(p => !p)}
                 className={`${c.text300} hover:text-white ${c.hoverBg} rounded-lg p-1.5 transition`}
