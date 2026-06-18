@@ -161,9 +161,12 @@ const PublicacionesAdminPage = () => {
   const onSubmit = async (datos) => {
     setCargando(true);
     try {
+      // Para tipos de grupo específico: guardar grupo IDs separado de usuario IDs
       let destIds = destinatariosSeleccionados;
+      let grupoIds = [];
       if (['grupo_especifico_con_ninos', 'grupo_especifico_sin_ninos'].includes(tipoSel)) {
-        destIds = await obtenerDestinatariosDeGrupos(destinatariosSeleccionados);
+        grupoIds = [...destinatariosSeleccionados]; // guardar IDs de grupos
+        destIds = await obtenerDestinatariosDeGrupos(destinatariosSeleccionados); // convertir a IDs de usuarios
       }
 
       if (editando) {
@@ -183,6 +186,7 @@ const PublicacionesAdminPage = () => {
       formData.append('contenido', datos.contenido);
       formData.append('tipo_destinatario', tipoSel);
       formData.append('destinatarios_ids', JSON.stringify(destIds));
+      formData.append('grupos_ids', JSON.stringify(grupoIds));
       archivos.forEach(f => formData.append('archivos', f));
 
       const { data } = await api.post('/publicaciones', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
