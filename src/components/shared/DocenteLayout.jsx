@@ -1,44 +1,74 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { FiMenu, FiHome, FiGrid, FiCheckSquare, FiBookOpen, FiBell, FiUser, FiLogOut, FiBarChart2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
-// Colores hardcodeados por nombre — Tailwind purga las clases dinámicas
 const COLORES = {
   indigo: {
-    bg800:      'bg-indigo-800',
-    bg400:      'bg-indigo-400',
-    borderB:    'border-b border-indigo-700',
-    borderT:    'border-t border-indigo-700',
-    text300:    'text-indigo-300',
-    text100:    'text-indigo-100',
-    text200:    'text-indigo-200',
-    hoverBg:    'hover:bg-indigo-700',
-    rolClass:   'rol-docente',
+    bg800:    'bg-indigo-800',
+    bg400:    'bg-indigo-400',
+    borderB:  'border-b border-indigo-700',
+    borderT:  'border-t border-indigo-700',
+    text300:  'text-indigo-300',
+    text100:  'text-indigo-100',
+    text200:  'text-indigo-200',
+    hoverBg:  'hover:bg-indigo-700',
+    rolClass: 'rol-docente',
   },
   violet: {
-    bg800:      'bg-violet-800',
-    bg400:      'bg-violet-400',
-    borderB:    'border-b border-violet-700',
-    borderT:    'border-t border-violet-700',
-    text300:    'text-violet-300',
-    text100:    'text-violet-100',
-    text200:    'text-violet-200',
-    hoverBg:    'hover:bg-violet-700',
-    rolClass:   'rol-ayudante',
+    bg800:    'bg-violet-800',
+    bg400:    'bg-violet-400',
+    borderB:  'border-b border-violet-700',
+    borderT:  'border-t border-violet-700',
+    text300:  'text-violet-300',
+    text100:  'text-violet-100',
+    text200:  'text-violet-200',
+    hoverBg:  'hover:bg-violet-700',
+    rolClass: 'rol-ayudante',
   },
+};
+
+// Ruta de publicaciones según rol
+const RUTA_PUBS = {
+  indigo: '/docente/publicaciones',
+  violet: '/ayudante/avisos',
 };
 
 const buildLayout = (navItems, rolLabel, color) => {
   const c = COLORES[color] || COLORES.indigo;
+  const rutaPubs = RUTA_PUBS[color];
 
   return function Layout() {
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [abierto, setAbierto] = useState(false);
     const [colapsado, setColapsado] = useState(false);
+    const [noVistas, setNoVistas] = useState(0);
 
     const handleLogout = () => { logout(); navigate('/login'); };
+
+    // Cargar conteo de publicaciones no vistas
+    const cargarNoVistas = async () => {
+      try {
+        const { data } = await api.get('/publicaciones/no-vistas');
+        setNoVistas(data.no_vistas || 0);
+      } catch {}
+    };
+
+    useEffect(() => {
+      cargarNoVistas();
+    }, []);
+
+    // Cuando el usuario navega a publicaciones, resetear el badge
+    useEffect(() => {
+      if (location.pathname === rutaPubs) {
+        // Esperar un momento para que la página cargue y marque como vistas
+        const timer = setTimeout(() => setNoVistas(0), 500);
+        return () => clearTimeout(timer);
+      }
+    }, [location.pathname]);
 
     const Avatar = () => (
       usuario?.foto_url
@@ -58,12 +88,54 @@ const buildLayout = (navItems, rolLabel, color) => {
       </div>
     );
 
+    const NavItem = ({ to, icon: Icon, label }) => {
+      const esPubs = to === rutaPubs;
+      return (
+        <NavLink key={to} to={to} title={colapsado ? label : undefined}
+          className={({ isActive }) =>
+            `relative flex items-center rounded-xl text-sm font-medium transition
+            ${colapsado ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}
+            ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
+          }>
+          <span className="relative shrink-0">
+            <Icon size={18} />
+            {esPubs && noVistas > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                {noVistas > 99 ? '99+' : noVistas}
+              </span>
+            )}
+          </span>
+          {!colapsado && <span>{label}</span>}
+        </NavLink>
+      );
+    };
+
+    const NavItemMobile = ({ to, icon: Icon, label }) => {
+      const esPubs = to === rutaPubs;
+      return (
+        <NavLink to={to} onClick={() => setAbierto(false)}
+          className={({ isActive }) =>
+            `relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
+            ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
+          }>
+          <span className="relative shrink-0">
+            <Icon size={18} />
+            {esPubs && noVistas > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                {noVistas > 99 ? '99+' : noVistas}
+              </span>
+            )}
+          </span>
+          {label}
+        </NavLink>
+      );
+    };
+
     return (
       <div className={`flex h-screen bg-gray-50 ${c.rolClass}`}>
 
-        {/* ── Sidebar DESKTOP ─────────────────────────────────── */}
+        {/* Sidebar DESKTOP */}
         <aside className={`hidden lg:flex flex-col ${c.bg800} min-h-screen transition-all duration-300 ${colapsado ? 'w-16' : 'w-64'}`}>
-
           <div className={`${c.borderB} flex items-center ${colapsado ? 'justify-center py-5 px-2' : 'justify-between p-5'}`}>
             {!colapsado && <LogoHeader />}
             {colapsado && <img src="/favicon_verbo.png" alt="Logo" className="w-9 h-9 rounded-full object-cover" />}
@@ -75,17 +147,7 @@ const buildLayout = (navItems, rolLabel, color) => {
           </div>
 
           <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-2">
-            {navItems.map(({ to, icon: Icon, label }) => (
-              <NavLink key={to} to={to} title={colapsado ? label : undefined}
-                className={({ isActive }) =>
-                  `flex items-center rounded-xl text-sm font-medium transition
-                  ${colapsado ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}
-                  ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
-                }>
-                <Icon size={18} className="shrink-0" />
-                {!colapsado && <span>{label}</span>}
-              </NavLink>
-            ))}
+            {navItems.map(item => <NavItem key={item.to} {...item} />)}
           </nav>
 
           <div className={`${c.borderT} ${colapsado ? 'py-4 px-2' : 'p-4'}`}>
@@ -115,21 +177,13 @@ const buildLayout = (navItems, rolLabel, color) => {
           </div>
         </aside>
 
-        {/* ── Sidebar MOBILE overlay ───────────────────────────── */}
+        {/* Sidebar MOBILE */}
         {abierto && (
           <div className="lg:hidden fixed inset-0 z-50 flex">
             <div className={`w-64 flex flex-col ${c.bg800}`}>
               <div className={`p-5 ${c.borderB}`}><LogoHeader /></div>
               <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {navItems.map(({ to, icon: Icon, label }) => (
-                  <NavLink key={to} to={to} onClick={() => setAbierto(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
-                      ${isActive ? 'bg-white text-primary-600' : `${c.text100} ${c.hoverBg}`}`
-                    }>
-                    <Icon size={18} /> {label}
-                  </NavLink>
-                ))}
+                {navItems.map(item => <NavItemMobile key={item.to} {...item} />)}
               </nav>
               <div className={`p-4 ${c.borderT}`}>
                 <div className="flex items-center gap-3 mb-3">
@@ -149,7 +203,7 @@ const buildLayout = (navItems, rolLabel, color) => {
           </div>
         )}
 
-        {/* ── Main ─────────────────────────────────────────────── */}
+        {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:justify-end">
             <button onClick={() => setAbierto(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100">
