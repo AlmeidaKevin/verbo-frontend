@@ -57,6 +57,7 @@ const UsuariosPage = () => {
   const [editando, setEditando] = useState(null);
   const [verPass, setVerPass] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [dropdownAbierto, setDropdownAbierto] = useState(null); // id del usuario con dropdown abierto
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   useEffect(() => { cargar(); }, []);
@@ -216,22 +217,31 @@ const UsuariosPage = () => {
                         ) : (
                           <div className="flex items-center gap-1">
                             {/* Selector de estado */}
-                            <div className="relative group">
-                              <button className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
+                            <div className="relative">
+                              <button
+                                onClick={() => setDropdownAbierto(dropdownAbierto === u.id ? null : u.id)}
+                                className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
                                 {est.label}
+                                <span className="ml-0.5 opacity-60">▾</span>
                               </button>
-                              {/* Dropdown al hover */}
-                              <div className="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded-xl shadow-xl z-10 min-w-[140px] overflow-hidden">
-                                {opcionesEstado(u).map(op => (
-                                  <button key={op.value} onClick={() => cambiarEstado(u, op.value)}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold' : ''}`}>
-                                    <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
-                                    {op.label}
-                                    {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
-                                  </button>
-                                ))}
-                              </div>
+                              {dropdownAbierto === u.id && (
+                                <>
+                                  {/* Overlay para cerrar al hacer clic fuera */}
+                                  <div className="fixed inset-0 z-10" onClick={() => setDropdownAbierto(null)} />
+                                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 min-w-[150px] overflow-hidden">
+                                    {opcionesEstado(u).map(op => (
+                                      <button key={op.value}
+                                        onClick={() => { cambiarEstado(u, op.value); setDropdownAbierto(null); }}
+                                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold bg-gray-50' : ''}`}>
+                                        <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
+                                        {op.label}
+                                        {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
                             </div>
                             <InfoTooltip texto={est.info} />
                           </div>
