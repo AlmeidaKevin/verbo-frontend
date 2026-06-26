@@ -19,6 +19,7 @@ const ChecklistPage = () => {
   const [filtrados, setFiltrados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [marcando, setMarcando] = useState(false);
   const [observacionGeneral, setObservacionGeneral] = useState('');
   const [mostrarObservacion, setMostrarObservacion] = useState(false);
   const [modalComentario, setModalComentario] = useState(null);
@@ -98,6 +99,8 @@ const ChecklistPage = () => {
   };
 
   const marcarAsistencia = async (nino) => {
+    if (marcando) return;
+    setMarcando(true);
     try {
       const { data } = await api.post('/asistencias/marcar', { registro_id: registro.id, nino_id: nino.id, llego_tarde: false });
       setAsistencias(prev => { if (prev.find(a => a.id === data.asistencia.id)) return prev; return [...prev, { ...data.asistencia, nino }]; });
@@ -107,6 +110,8 @@ const ChecklistPage = () => {
       const msg = err.response?.data?.message || '';
       if (msg.includes('ya fue marcado')) { toast('Este niño ya fue marcado', { icon: '⚠️' }); return; }
       toast.error(msg || 'Error al marcar');
+    } finally {
+      setMarcando(false);
     }
   };
 
@@ -316,9 +321,13 @@ const ChecklistPage = () => {
           <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
             {filtrados.map(nino => (
               <button key={nino.id} onClick={() => marcarAsistencia(nino)}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-primary-50 text-left text-sm border-b border-gray-100 last:border-0 transition">
+                disabled={marcando}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-primary-50 text-left text-sm border-b border-gray-100 last:border-0 transition disabled:opacity-50 disabled:cursor-not-allowed">
                 <span className="text-gray-800">{nino.nombre_completo}</span>
-                <span className="text-primary-600 text-xs font-medium flex items-center gap-1"><FiCheck size={14} /> Marcar</span>
+                <span className="text-primary-600 text-xs font-medium flex items-center gap-1">
+                  {marcando ? <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary-600" /> : <FiCheck size={14} />}
+                  Marcar
+                </span>
               </button>
             ))}
           </div>
