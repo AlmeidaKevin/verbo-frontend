@@ -362,8 +362,8 @@ const ChecklistPage = () => {
                       {a.comentario && (
                         <button
                           onClick={() => setModalNota({ nombre: a.nino?.nombre_completo, comentario: a.comentario })}
-                          className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200 transition"><FiEye size={10} />
-                          Nota
+                          className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200 transition">
+                          <FiEye size={10} />Nota
                         </button>
                       )}
                     </div>
