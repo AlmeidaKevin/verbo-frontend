@@ -103,10 +103,10 @@ const ChecklistPage = () => {
       const { data } = await api.post('/asistencias/marcar', { registro_id: registro.id, nino_id: nino.id, llego_tarde: false });
       setAsistencias(prev => { if (prev.find(a => a.id === data.asistencia.id)) return prev; return [...prev, { ...data.asistencia, nino }]; });
       setBusqueda('');
-      toast.success(`✅ ${nino.nombre_completo} marcado`);
+      toast.success(`${nino.nombre_completo} marcado`);
     } catch (err) {
       const msg = err.response?.data?.message || '';
-      if (msg.includes('ya fue marcado')) { toast('⚠️ Este niño ya fue marcado', { icon: '⚠️' }); return; }
+      if (msg.includes('ya fue marcado')) { toast('Este niño ya fue marcado', { icon: '⚠️' }); return; }
       toast.error(msg || 'Error al marcar');
     }
   };
