@@ -98,24 +98,25 @@ const PaginaPublica = () => {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="grid sm:grid-cols-2 gap-10 items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-5">
-                <div className="h-px w-8" style={{ background: '#C8A96B' }} />
-                <span className="text-xs font-semibold tracking-widest uppercase"
+            <div className="text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-3 mb-5">
+                <div className="h-px flex-1 sm:flex-none sm:w-8" style={{ background: '#C8A96B' }} />
+                <span className="text-xs font-semibold tracking-widest uppercase whitespace-nowrap"
                   style={{ color: '#C8A96B' }}>
                   Sistema de Gestión
                 </span>
+                <div className="h-px flex-1 sm:w-8" style={{ background: '#C8A96B' }} />
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
                 Escuela Dominical
                 <br />
                 <span style={{ color: '#C8A96B' }}>Verbo Mañosca</span>
               </h1>
-              <p className="text-sm leading-relaxed mb-8" style={{ color: '#9EC5D0', maxWidth: 380 }}>
+              <p className="text-sm leading-relaxed mb-8 mx-auto sm:mx-0" style={{ color: '#9EC5D0', maxWidth: 380 }}>
                 Plataforma de gestión para docentes y administradores.
                 Consulta reuniones, grupos y comunicados de la semana.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                 <a href="#contenido"
                   className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90"
                   style={{ background: '#C8A96B', color: '#112C36' }}>
