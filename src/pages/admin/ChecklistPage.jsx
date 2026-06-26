@@ -23,6 +23,7 @@ const ChecklistPage = () => {
   const [observacionGeneral, setObservacionGeneral] = useState('');
   const [mostrarObservacion, setMostrarObservacion] = useState(false);
   const [modalComentario, setModalComentario] = useState(null);
+  const [modalNota, setModalNota] = useState(null);
   const [modalDescarga, setModalDescarga] = useState(false);
 
   const [modalAgregar, setModalAgregar] = useState(false);
@@ -173,7 +174,6 @@ const ChecklistPage = () => {
     if (!nuevoNombre.trim()) return toast.error('Ingresa el nombre del niño');
     if (/\d/.test(nuevoNombre)) return toast.error('El nombre no puede contener números');
     if (masInfo && nuevoContacto && !/^\d+$/.test(nuevoContacto)) return toast.error('El contacto solo puede contener números');
-
     try {
       const payload = {
         nombre_completo: nuevoNombre.trim(),
@@ -359,7 +359,13 @@ const ChecklistPage = () => {
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-gray-400">{a.hora_llegada ? new Date(a.hora_llegada).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                       {a.llego_tarde && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full flex items-center gap-1"><FiClock size={10} /> Tarde</span>}
-                      {a.comentario && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Nota</span>}
+                      {a.comentario && (
+                        <button
+                          onClick={() => setModalNota({ nombre: a.nino?.nombre_completo, comentario: a.comentario })}
+                          className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200 transition">
+                          Nota
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,6 +425,31 @@ const ChecklistPage = () => {
               </button>
               <button onClick={() => descargar('pdf')} className="flex items-center gap-3 w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-medium py-3 px-4 rounded-xl transition">
                 <FiFileText size={22} /><div className="text-left"><p className="text-sm font-semibold">PDF (.pdf)</p><p className="text-xs text-red-600">Listo para imprimir</p></div>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal ver nota */}
+      {modalNota && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-gray-800">Nota</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{modalNota.nombre}</p>
+              </div>
+              <button onClick={() => setModalNota(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{modalNota.comentario}</p>
+            </div>
+            <div className="px-5 pb-5">
+              <button onClick={() => setModalNota(null)}
+                className="w-full py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
+                Cerrar
               </button>
             </div>
           </div>
