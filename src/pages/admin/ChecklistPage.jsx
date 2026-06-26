@@ -362,7 +362,7 @@ const ChecklistPage = () => {
                       {a.comentario && (
                         <button
                           onClick={() => setModalNota({ nombre: a.nino?.nombre_completo, comentario: a.comentario })}
-                          className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200 transition">
+                          className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200 transition"><FiEye size={10} />
                           Nota
                         </button>
                       )}
@@ -438,7 +438,7 @@ const ChecklistPage = () => {
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div>
-                <h3 className="font-bold text-gray-800"><FiEye size={10} />Nota</h3>
+                <h3 className="font-bold text-gray-800">Nota</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{modalNota.nombre}</p>
               </div>
               <button onClick={() => setModalNota(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
