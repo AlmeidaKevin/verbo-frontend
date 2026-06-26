@@ -162,25 +162,41 @@ const UsuariosPage = () => {
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="relative rounded-2xl overflow-hidden p-6 flex items-center justify-between gap-4"
+      <div className="relative rounded-2xl overflow-hidden p-6"
         style={{ background: 'linear-gradient(135deg, #1F4E5F 0%, #183D4A 100%)' }}>
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white" style={{ transform: 'translate(30%,-30%)' }} />
         </div>
-        <div className="relative flex-1">
-          <h1 className="text-xl font-bold text-white">Usuarios</h1>
-          <div className="flex flex-wrap gap-4 mt-2">
-            <span className="text-xs" style={{ color: '#9EC5D0' }}>{activos} activados</span>
-            <span className="text-xs" style={{ color: '#9EC5D0' }}>{pendientes} pendientes</span>
-            <span className="text-xs" style={{ color: '#9EC5D0' }}>{docentes} docentes</span>
-            <span className="text-xs" style={{ color: '#9EC5D0' }}>{ayudantes} ayudantes</span>
+        <div className="relative">
+          {/* Título y botón */}
+          <div className="flex items-center justify-between gap-4 mb-5">
+            <div>
+              <h1 className="text-xl font-bold text-white">Usuarios</h1>
+              <p className="text-xs mt-0.5" style={{ color: '#9EC5D0' }}>{usuarios.length} usuarios en total</p>
+            </div>
+            <button onClick={() => abrirModal()}
+              className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition shrink-0"
+              style={{ background: '#C8A96B', color: '#112C36' }}>
+              <FiPlus size={18} /> Nuevo Usuario
+            </button>
+          </div>
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {[
+              { label: 'Administradores', value: usuarios.filter(u => u.rol === 'admin').length, bg: 'bg-red-500/20', text: 'text-red-200' },
+              { label: 'Docentes', value: docentes, bg: 'bg-blue-500/20', text: 'text-blue-200' },
+              { label: 'Ayudantes', value: ayudantes, bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Activados', value: activos, bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Pendientes', value: pendientes, bg: 'bg-amber-500/20', text: 'text-amber-200' },
+              { label: 'Desactivados', value: usuarios.filter(u => u.estado === 'desactivada').length, bg: 'bg-red-500/20', text: 'text-red-200' },
+            ].map(({ label, value, bg, text }) => (
+              <div key={label} className={`${bg} rounded-xl px-3 py-2.5 text-center`}>
+                <p className={`text-lg font-bold ${text}`}>{value}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
+              </div>
+            ))}
           </div>
         </div>
-        <button onClick={() => abrirModal()}
-          className="relative flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition shrink-0"
-          style={{ background: '#C8A96B', color: '#112C36' }}>
-          <FiPlus size={18} /> Nuevo Usuario
-        </button>
       </div>
 
       {/* Filtros */}
