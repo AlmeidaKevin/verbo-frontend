@@ -24,7 +24,6 @@ const ChecklistPage = () => {
   const [modalComentario, setModalComentario] = useState(null);
   const [modalDescarga, setModalDescarga] = useState(false);
 
-  // Estado modal agregar niño
   const [modalAgregar, setModalAgregar] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [masInfo, setMasInfo] = useState(false);
@@ -451,84 +450,52 @@ const ChecklistPage = () => {
               </div>
               <button onClick={() => setModalAgregar(false)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
             </div>
-
             <div className="p-5 space-y-4">
-              {/* Nombre — siempre visible */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
-                <input
-                  value={nuevoNombre}
-                  onChange={e => setNuevoNombre(e.target.value)}
+                <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)}
                   placeholder="Nombre y apellido del niño"
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  onKeyDown={e => e.key === 'Enter' && !masInfo && agregarNuevoNino()}
-                  autoFocus
-                />
+                  onKeyDown={e => e.key === 'Enter' && !masInfo && agregarNuevoNino()} autoFocus />
               </div>
-
-              {/* Toggle más información */}
               <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
-                <input
-                  type="checkbox"
-                  checked={masInfo}
-                  onChange={e => setMasInfo(e.target.checked)}
-                  className="w-4 h-4 rounded text-primary-600"
-                />
+                <input type="checkbox" checked={masInfo} onChange={e => setMasInfo(e.target.checked)} className="w-4 h-4 rounded text-primary-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-700">Agregar más información</p>
                   <p className="text-xs text-gray-400">Edad, contacto, grupo y observaciones</p>
                 </div>
                 <FiChevronDown size={16} className={`text-gray-400 transition-transform ${masInfo ? 'rotate-180' : ''}`} />
               </label>
-
-              {/* Campos extra — visibles solo si masInfo */}
               {masInfo && (
                 <div className="space-y-4 pt-1">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Edad</label>
-                    <input
-                      type="number" min={0} max={17}
-                      value={nuevoEdad}
-                      onChange={e => setNuevoEdad(e.target.value)}
+                    <input type="number" min={0} max={17} value={nuevoEdad} onChange={e => setNuevoEdad(e.target.value)}
                       placeholder="Ej: 7"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Número de contacto</label>
-                    <input
-                      value={nuevoContacto}
-                      onChange={e => setNuevoContacto(e.target.value)}
+                    <input value={nuevoContacto} onChange={e => setNuevoContacto(e.target.value)}
                       placeholder="Ej: 0991234567"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Grupo asignado</label>
-                    <select
-                      value={nuevoGrupoId}
-                      onChange={e => setNuevoGrupoId(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
+                    <select value={nuevoGrupoId} onChange={e => setNuevoGrupoId(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
                       <option value="">Sin grupo asignado</option>
                       {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre} ({g.edad_min}–{g.edad_max} años)</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Observación <span className="text-gray-400 font-normal">(opcional)</span>
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={nuevoObservacion}
-                      onChange={e => setNuevoObservacion(e.target.value)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Observación <span className="text-gray-400 font-normal">(opcional)</span></label>
+                    <textarea rows={3} value={nuevoObservacion} onChange={e => setNuevoObservacion(e.target.value)}
                       placeholder="Alergias, condiciones especiales, etc."
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500" />
                   </div>
                 </div>
               )}
-
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setModalAgregar(false)} className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
                 <button onClick={agregarNuevoNino} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition">Agregar</button>
