@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiEdit2, FiX, FiEye, FiEyeOff, FiSearch, FiUsers, FiInfo } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiX, FiEye, FiEyeOff, FiSearch, FiUsers, FiInfo, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+
+const SUPER_ADMIN_EMAIL = 'almeidakevin783@gmail.com';
 
 const ROLES = [
   { value: 'admin', label: 'Administrador' },
@@ -12,17 +15,16 @@ const ROLES = [
 ];
 
 const ESTADOS = [
-  { value: 'activada',     label: 'Activada',     color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500',
-    info: 'El usuario verificó su cuenta mediante el correo enviado y puede iniciar sesión normalmente.' },
-  { value: 'pendiente',    label: 'Pendiente',    color: 'bg-amber-100 text-amber-700',    dot: 'bg-amber-400',
-    info: 'El usuario recibió el correo de verificación pero aún no hizo clic en el enlace de verificación.' },
-  { value: 'desactivada',  label: 'Desactivada',  color: 'bg-red-100 text-red-700',        dot: 'bg-red-500',
-    info: 'El usuario no puede iniciar sesión. Al intentar hacerlo, verá el mensaje "Tu cuenta ha sido desactivada".' },
+  { value: 'activada',    label: 'Activada',    color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500',
+    info: 'El usuario verificó su cuenta y puede iniciar sesión normalmente.' },
+  { value: 'pendiente',   label: 'Pendiente',   color: 'bg-amber-100 text-amber-700',    dot: 'bg-amber-400',
+    info: 'El usuario recibió el correo de verificación pero aún no hizo clic en el enlace.' },
+  { value: 'desactivada', label: 'Desactivada', color: 'bg-red-100 text-red-700',        dot: 'bg-red-500',
+    info: 'El usuario no puede iniciar sesión. Verá el mensaje "Tu cuenta ha sido desactivada".' },
 ];
 
 const estadoInfo = (estado) => ESTADOS.find(e => e.value === estado) || ESTADOS[1];
 
-// Tooltip flotante
 const InfoTooltip = ({ texto }) => {
   const [pos, setPos] = useState(null);
   const btnRef = useRef(null);
@@ -50,14 +52,18 @@ const InfoTooltip = ({ texto }) => {
 };
 
 const UsuariosPage = () => {
+  const { usuario: usuarioActual } = useAuth();
+  const esSuperAdmin = usuarioActual?.email === SUPER_ADMIN_EMAIL;
+
   const [usuarios, setUsuarios] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [rolFiltro, setRolFiltro] = useState('');
+  const [estadoFiltro, setEstadoFiltro] = useState('');
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [verPass, setVerPass] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [dropdownAbierto, setDropdownAbierto] = useState(null); // id del usuario con dropdown abierto
+  const [dropdownAbierto, setDropdownAbierto] = useState(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   useEffect(() => { cargar(); }, []);
@@ -111,10 +117,25 @@ const UsuariosPage = () => {
     } catch (err) { toast.error(err.response?.data?.message || 'Error al cambiar estado'); }
   };
 
+  const eliminar = async (usuario) => {
+    // Verificar si puede eliminar
+    if (usuario.rol === 'admin' && !esSuperAdmin) {
+      return toast.error('Solo el administrador principal puede eliminar otros administradores');
+    }
+    if (!window.confirm(`¿Eliminar permanentemente a ${usuario.nombre_completo}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await api.delete(`/usuarios/${usuario.id}`);
+      setUsuarios(prev => prev.filter(u => u.id !== usuario.id));
+      toast.success('Usuario eliminado');
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al eliminar usuario'); }
+  };
+
   const usuariosFiltrados = usuarios.filter(u => {
     const matchBusqueda = u.nombre_completo.toLowerCase().includes(filtro.toLowerCase()) ||
       u.email.toLowerCase().includes(filtro.toLowerCase()) || u.cedula.includes(filtro);
-    return matchBusqueda && (rolFiltro ? u.rol === rolFiltro : true);
+    const matchRol = rolFiltro ? u.rol === rolFiltro : true;
+    const matchEstado = estadoFiltro ? (u.estado || 'pendiente') === estadoFiltro : true;
+    return matchBusqueda && matchRol && matchEstado;
   });
 
   const rolBadge = (rol) => ({ admin: 'bg-red-100 text-red-700', docente: 'bg-blue-100 text-blue-700', ayudante: 'bg-emerald-100 text-emerald-700' }[rol] || 'bg-gray-100 text-gray-600');
@@ -126,14 +147,16 @@ const UsuariosPage = () => {
   const docentes = usuarios.filter(u => u.rol === 'docente').length;
   const ayudantes = usuarios.filter(u => u.rol === 'ayudante').length;
 
-  // Opciones de estado disponibles según si el usuario ya verificó o no
   const opcionesEstado = (usuario) => {
-    if (usuario.email_verificado) {
-      // Ya verificó → solo puede cambiar a activada o desactivada
-      return ESTADOS.filter(e => e.value !== 'pendiente');
-    }
-    // No verificó → puede cambiar a cualquiera
+    if (usuario.email_verificado) return ESTADOS.filter(e => e.value !== 'pendiente');
     return ESTADOS;
+  };
+
+  // Determinar si se puede mostrar el botón eliminar para un usuario
+  const puedeEliminar = (u) => {
+    if (u.id === usuarioActual?.id) return false; // no puede eliminarse a sí mismo
+    if (u.rol === 'admin') return esSuperAdmin; // solo super admin puede eliminar admins
+    return true;
   };
 
   return (
@@ -172,6 +195,11 @@ const UsuariosPage = () => {
           className="border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
           <option value="">Todos los roles</option>
           {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select>
+        <select value={estadoFiltro} onChange={e => setEstadoFiltro(e.target.value)}
+          className="border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+          <option value="">Todos los estados</option>
+          {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
         </select>
       </div>
 
@@ -216,7 +244,6 @@ const UsuariosPage = () => {
                           <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
                         ) : (
                           <div className="flex items-center gap-1">
-                            {/* Selector de estado */}
                             <div className="relative">
                               <button
                                 onClick={() => setDropdownAbierto(dropdownAbierto === u.id ? null : u.id)}
@@ -227,7 +254,6 @@ const UsuariosPage = () => {
                               </button>
                               {dropdownAbierto === u.id && (
                                 <>
-                                  {/* Overlay para cerrar al hacer clic fuera */}
                                   <div className="fixed inset-0 z-10" onClick={() => setDropdownAbierto(null)} />
                                   <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 min-w-[150px] overflow-hidden">
                                     {opcionesEstado(u).map(op => (
@@ -248,9 +274,20 @@ const UsuariosPage = () => {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => abrirModal(u)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
-                          <FiEdit2 size={14} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => abrirModal(u)}
+                            className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
+                            title="Editar">
+                            <FiEdit2 size={14} />
+                          </button>
+                          {puedeEliminar(u) && (
+                            <button onClick={() => eliminar(u)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                              title="Eliminar">
+                              <FiTrash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -282,7 +319,16 @@ const UsuariosPage = () => {
                         <span className={`text-xs px-2 py-0.5 rounded-full ${rolBadge(u.rol)}`}>{ROLES.find(r => r.value === u.rol)?.label}</span>
                       </div>
                     </div>
-                    <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600"><FiEdit2 size={16} /></button>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600">
+                        <FiEdit2 size={16} />
+                      </button>
+                      {puedeEliminar(u) && (
+                        <button onClick={() => eliminar(u)} className="p-2 text-gray-400 hover:text-red-500">
+                          <FiTrash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="mt-3 space-y-1 text-xs text-gray-500">
                     <p>📧 {u.email}</p>
