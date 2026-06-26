@@ -93,7 +93,7 @@ const ChecklistPage = () => {
       setModoSelector(false);
       const { data: nData } = await api.get('/ninos');
       setTodosNinos(nData.ninos || []);
-      toast.success(nuevo ? '✅ Nueva lista iniciada' : '✅ Checklist cargado');
+      toast.success(nuevo ? 'Nueva lista iniciada' : 'Checklist cargado');
     } catch (err) { toast.error(err.response?.data?.message || 'Error al cargar checklist'); }
     finally { setCargando(false); }
   };
@@ -116,7 +116,7 @@ const ChecklistPage = () => {
     try {
       await api.delete(`/asistencias/${asistenciaId}`);
       setAsistencias(prev => prev.filter(a => a.id !== asistenciaId));
-      toast.success(`❌ ${ninoNombre} desmarcado`);
+      toast.success(`${ninoNombre} desmarcado`);
     } catch (err) { toast.error(err.response?.data?.message || 'Error al desmarcar'); }
   };
 
@@ -134,7 +134,7 @@ const ChecklistPage = () => {
     setGuardando(true);
     try {
       await api.post('/asistencias/guardar', { registro_id: registro.id, observacion_general: observacionGeneral });
-      toast.success('✅ Registro guardado exitosamente');
+      toast.success('Registro guardado exitosamente');
     } catch { toast.error('Error al guardar'); }
     finally { setGuardando(false); }
   };
