@@ -99,13 +99,13 @@ const PaginaPublica = () => {
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="grid sm:grid-cols-2 gap-10 items-center">
             <div className="text-center sm:text-left">
-              <div className="flex items-center justify-center sm:justify-start gap-3 mb-5">
-                <div className="h-px flex-1 sm:flex-none sm:w-8" style={{ background: '#C8A96B' }} />
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-px flex-1" style={{ background: '#C8A96B' }} />
                 <span className="text-xs font-semibold tracking-widest uppercase whitespace-nowrap"
                   style={{ color: '#C8A96B' }}>
                   Sistema de Gestión
                 </span>
-                <div className="h-px flex-1 sm:w-8" style={{ background: '#C8A96B' }} />
+                <div className="h-px flex-1" style={{ background: '#C8A96B' }} />
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
                 Escuela Dominical
