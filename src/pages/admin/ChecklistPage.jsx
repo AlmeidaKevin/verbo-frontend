@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid, FiCheckSquare, FiChevronDown } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiCheck, FiClock, FiMessageSquare, FiSave, FiDownload, FiX, FiPlus, FiFileText, FiRefreshCw, FiAlertCircle, FiGrid, FiCheckSquare, FiChevronDown, FiEye} from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import supabase from '../../config/supabase';
 import api from '../../services/api';
@@ -438,7 +438,7 @@ const ChecklistPage = () => {
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl mx-4">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <div>
-                <h3 className="font-bold text-gray-800">Nota</h3>
+                <h3 className="font-bold text-gray-800"><FiEye size={10} />Nota</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{modalNota.nombre}</p>
               </div>
               <button onClick={() => setModalNota(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
