@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AdminLayout from './components/shared/AdminLayout';
 import { DocenteLayout, AyudanteLayout } from './components/shared/DocenteLayout';
 
-
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 import OlvidePasswordPage from './pages/auth/OlvidePasswordPage';
@@ -46,7 +45,6 @@ import PerfilAyudantePage from './pages/ayudante/PerfilAyudantePage';
 // Chat
 import ChatPage from './pages/chat/ChatPage';
 
-// ── Ruta protegida ────────────────────────────────────────────
 const RutaProtegida = ({ children, roles }) => {
   const { usuario, cargando } = useAuth();
   if (cargando) return (
@@ -64,14 +62,13 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* ── Públicas ── */}
       <Route path="/" element={<PaginaPublica />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/olvide-password" element={<OlvidePasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/verificar-cuenta/:token" element={<VerificarCuentaPage />} />
 
-      {/* ── Admin ── */}
+      {/* Admin */}
       <Route path="/admin" element={
         <RutaProtegida roles={['admin']}>
           <AdminLayout />
@@ -90,7 +87,7 @@ const AppRoutes = () => {
         <Route path="perfil"        element={<PerfilAdminPage />} />
       </Route>
 
-      {/* ── Docente ── */}
+      {/* Docente */}
       <Route path="/docente" element={
         <RutaProtegida roles={['docente']}>
           <DocenteLayout />
@@ -107,7 +104,7 @@ const AppRoutes = () => {
         <Route path="perfil"        element={<PerfilDocentePage />} />
       </Route>
 
-      {/* ── Ayudante ── */}
+      {/* Ayudante */}
       <Route path="/ayudante" element={
         <RutaProtegida roles={['ayudante']}>
           <AyudanteLayout />
@@ -121,7 +118,6 @@ const AppRoutes = () => {
         <Route path="perfil"    element={<PerfilAyudantePage />} />
       </Route>
 
-      {/* ── Catch-all ── */}
       <Route path="*" element={
         usuario
           ? <Navigate to={`/${usuario.rol}/dashboard`} replace />
