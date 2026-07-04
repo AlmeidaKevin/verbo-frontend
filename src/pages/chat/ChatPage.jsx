@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  FiSearch, FiX, FiSend, FiPaperclip, FiImage, FiFile,
+  FiSearch, FiX, FiSend, FiPaperclip, FiFile,
   FiCheck, FiMessageSquare, FiDownload, FiChevronLeft,
-  FiMoreVertical, FiUser
+  FiMoreVertical, FiUser, FiUserPlus
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import supabase from '../../config/supabase';
@@ -25,20 +24,22 @@ const formatFecha = (fecha) => {
 
 const esMismoDia = (a, b) => {
   const da = new Date(a); const db = new Date(b);
-  return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
+  return da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate();
 };
 
 const esImagen = (tipo) => tipo?.startsWith('image/');
 
-// ── Palomitas de estado ──────────────────────────────────────
+// ── Palomitas ────────────────────────────────────────────────
 const Palomitas = ({ estado, esMio }) => {
   if (!esMio) return null;
-  if (estado === 'visto') return <span className="flex text-blue-400 text-xs ml-1">✓✓</span>;
-  if (estado === 'recibido') return <span className="flex text-gray-400 text-xs ml-1">✓✓</span>;
-  return <span className="flex text-gray-400 text-xs ml-1">✓</span>;
+  if (estado === 'visto')    return <span className="text-blue-400 text-xs ml-1">✓✓</span>;
+  if (estado === 'recibido') return <span className="text-gray-400 text-xs ml-1">✓✓</span>;
+  return <span className="text-gray-400 text-xs ml-1">✓</span>;
 };
 
-// ── Componente de burbuja de mensaje ────────────────────────
+// ── Burbuja de mensaje ───────────────────────────────────────
 const BurbujaMensaje = ({ msg, esMio }) => {
   const esArch = msg.tipo === 'archivo' || msg.tipo === 'imagen';
   const imgTipo = esArch && esImagen(msg.archivo_tipo);
@@ -46,11 +47,8 @@ const BurbujaMensaje = ({ msg, esMio }) => {
   return (
     <div className={`flex ${esMio ? 'justify-end' : 'justify-start'} mb-1`}>
       <div className={`max-w-[72%] sm:max-w-[60%] rounded-2xl px-3 py-2 shadow-sm ${
-        esMio
-          ? 'rounded-tr-sm text-white'
-          : 'rounded-tl-sm bg-white text-gray-800 border border-gray-100'
-      }`}
-        style={esMio ? { background: '#1F4E5F' } : {}}>
+        esMio ? 'rounded-tr-sm text-white' : 'rounded-tl-sm bg-white text-gray-800 border border-gray-100'
+      }`} style={esMio ? { background: '#1F4E5F' } : {}}>
 
         {esArch && (
           imgTipo ? (
@@ -84,7 +82,9 @@ const BurbujaMensaje = ({ msg, esMio }) => {
           }`}>{msg.contenido}</p>
         )}
 
-        <div className={`flex items-center justify-end gap-1 mt-0.5 ${esMio ? 'text-white/60' : 'text-gray-400'}`}>
+        <div className={`flex items-center justify-end gap-1 mt-0.5 ${
+          esMio ? 'text-white/60' : 'text-gray-400'
+        }`}>
           <span className="text-xs">{formatHora(msg.created_at)}</span>
           <Palomitas estado={msg.estado} esMio={esMio} />
         </div>
@@ -93,18 +93,20 @@ const BurbujaMensaje = ({ msg, esMio }) => {
   );
 };
 
-// ── Componente separador de fecha ────────────────────────────
+// ── Separador de fecha ───────────────────────────────────────
 const SeparadorFecha = ({ fecha }) => (
   <div className="flex items-center justify-center my-4">
-    <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+    <span className="text-xs text-gray-500 bg-white/80 px-3 py-1 rounded-full shadow-sm">
       {formatFecha(fecha)}
     </span>
   </div>
 );
 
-// ── Componente tarjeta de conversación ───────────────────────
+// ── Tarjeta de conversación ──────────────────────────────────
 const TarjetaConversacion = ({ conv, activa, onClick }) => {
   const ultimo = conv.ultimo_mensaje;
+  const esConocido = conv.es_contacto !== false; // true por defecto
+
   const previewTexto = () => {
     if (!ultimo) return 'Inicia la conversación';
     if (ultimo.tipo === 'imagen') return '📷 Imagen';
@@ -116,22 +118,31 @@ const TarjetaConversacion = ({ conv, activa, onClick }) => {
     <button onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition text-left border-b border-gray-100 last:border-0 ${
         activa ? 'bg-primary-50 border-l-4 border-l-primary-600' : ''
-      }`}>
+      } ${!esConocido ? 'opacity-80' : ''}`}>
       <div className="relative shrink-0">
         {conv.contacto.foto_url
-          ? <img src={conv.contacto.foto_url} alt="" className="w-11 h-11 rounded-full object-cover" />
-          : <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
-              style={{ background: '#1F4E5F' }}>
+          ? <img src={conv.contacto.foto_url} alt=""
+              className={`w-11 h-11 rounded-full object-cover ${!esConocido ? 'grayscale' : ''}`} />
+          : <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white ${
+              !esConocido ? 'bg-gray-400' : ''
+            }`} style={esConocido ? { background: '#1F4E5F' } : {}}>
               {conv.contacto.nombre_completo[0]}
             </div>
         }
-        {conv.en_linea && (
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-gray-800 truncate">{conv.contacto.nombre_completo}</p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className={`text-sm font-semibold truncate ${!esConocido ? 'text-gray-500' : 'text-gray-800'}`}>
+              {conv.contacto.nombre_completo}
+            </p>
+            {!esConocido && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full shrink-0 font-medium"
+                style={{ background: '#FEF3C7', color: '#D97706' }}>
+                Desconocido
+              </span>
+            )}
+          </div>
           {ultimo && (
             <span className="text-xs text-gray-400 shrink-0">{formatHora(ultimo.created_at)}</span>
           )}
@@ -150,7 +161,7 @@ const TarjetaConversacion = ({ conv, activa, onClick }) => {
   );
 };
 
-// ── Página principal de chat ─────────────────────────────────
+// ── Página principal ─────────────────────────────────────────
 const ChatPage = () => {
   const { usuario } = useAuth();
   const [conversaciones, setConversaciones] = useState([]);
@@ -162,30 +173,33 @@ const ChatPage = () => {
   const [buscando, setBuscando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [cargandoMsgs, setCargandoMsgs] = useState(false);
-  const [mostrarPanel, setMostrarPanel] = useState(false); // panel lateral info
-  const [vistaMovil, setVistaMovil] = useState('lista'); // 'lista' | 'chat'
+  const [mostrarPanel, setMostrarPanel] = useState(false);
+  // En móvil: 'lista' | 'chat'
+  const [vistaMovil, setVistaMovil] = useState('lista');
 
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const busquedaTimer = useRef(null);
   const canalRef = useRef(null);
+  const todosNinosRef = useRef([]);
 
   // ── Cargar conversaciones ──
   const cargarConversaciones = useCallback(async () => {
     try {
       const { data } = await api.get('/chat/conversaciones');
       setConversaciones(data.conversaciones || []);
-    } catch { /* silencioso */ }
+    } catch {}
   }, []);
 
   useEffect(() => { cargarConversaciones(); }, [cargarConversaciones]);
 
+  // ── En móvil siempre empieza en lista ──
+  useEffect(() => { setVistaMovil('lista'); }, []);
+
   // ── Scroll al final ──
-  const scrollAbajo = () => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  useEffect(() => { scrollAbajo(); }, [mensajes]);
+  }, [mensajes]);
 
   // ── Buscar usuarios en tiempo real ──
   useEffect(() => {
@@ -207,66 +221,51 @@ const ChatPage = () => {
     setBusqueda(''); setResultados([]);
     try {
       const { data } = await api.post('/chat/conversaciones', { contacto_id: contacto.id });
-      const convId = data.conversacion_id;
-
-      // Verificar si ya está en la lista
-      const existe = conversaciones.find(c => c.id === convId);
-      if (!existe) {
-        await cargarConversaciones();
-      }
-
-      await cargarMensajes(convId, contacto);
+      await cargarConversaciones();
+      await cargarMensajes(data.conversacion_id, contacto);
       setVistaMovil('chat');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al abrir conversación');
     }
   };
 
-  // ── Cargar mensajes de una conversación ──
+  // ── Cargar mensajes ──
   const cargarMensajes = async (convId, contacto = null) => {
     setCargandoMsgs(true);
     try {
       const { data } = await api.get(`/chat/mensajes/${convId}`);
       setMensajes(data.mensajes || []);
-
-      // Actualizar contadores
       setConversaciones(prev => prev.map(c =>
         c.id === convId ? { ...c, no_leidos: 0 } : c
       ));
-
-      // Determinar contacto si no se pasó
       let contactoInfo = contacto;
       if (!contactoInfo) {
         const conv = conversaciones.find(c => c.id === convId);
         contactoInfo = conv?.contacto;
       }
-
       setConvActiva({ id: convId, contacto: contactoInfo });
       suscribirRealtime(convId);
     } catch { toast.error('Error al cargar mensajes'); }
     finally { setCargandoMsgs(false); }
   };
 
-  // ── Realtime Supabase ──
+  // ── Realtime ──
   const suscribirRealtime = (convId) => {
     if (canalRef.current) supabase.removeChannel(canalRef.current);
-    canalRef.current = supabase.channel(`chat-${convId}`)
+    canalRef.current = supabase
+      .channel(`chat-conv-${convId}-${Date.now()}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'mensajes',
         filter: `conversacion_id=eq.${convId}`
       }, async (payload) => {
         const nuevo = payload.new;
-        if (nuevo.remitente_id === usuario.id) return; // ya lo tenemos optimista
-
-        // Marcar como recibido
+        if (nuevo.remitente_id === usuario.id) return;
         await api.put(`/chat/mensajes/${nuevo.id}/recibido`).catch(() => {});
-
         setMensajes(prev => {
           if (prev.find(m => m.id === nuevo.id)) return prev;
           return [...prev, { ...nuevo, estado: 'recibido' }];
         });
-
-        // Marcar como visto inmediatamente si el chat está abierto
+        // Marcar visto inmediatamente
         await api.get(`/chat/mensajes/${convId}`).catch(() => {});
         setConversaciones(prev => prev.map(c =>
           c.id === convId ? { ...c, no_leidos: 0, ultimo_mensaje: nuevo } : c
@@ -280,20 +279,34 @@ const ChatPage = () => {
           m.id === payload.new.id ? { ...m, estado: payload.new.estado } : m
         ));
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime chat:', status);
+      });
   };
+
+  // Suscribir a conversaciones nuevas (mensajes de desconocidos)
+  useEffect(() => {
+    if (!usuario?.id) return;
+    const canalGlobal = supabase
+      .channel(`chat-global-${usuario.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'conversaciones',
+      }, () => {
+        cargarConversaciones();
+      })
+      .subscribe();
+    return () => supabase.removeChannel(canalGlobal);
+  }, [usuario?.id, cargarConversaciones]);
 
   useEffect(() => {
     return () => { if (canalRef.current) supabase.removeChannel(canalRef.current); };
   }, []);
 
-  // ── Enviar mensaje de texto ──
+  // ── Enviar mensaje ──
   const enviarMensaje = async () => {
     if (!texto.trim() || !convActiva || enviando) return;
     const contenido = texto.trim();
     setTexto('');
-
-    // Optimista
     const tempId = `temp-${Date.now()}`;
     const tempMsg = {
       id: tempId, conversacion_id: convActiva.id,
@@ -301,7 +314,6 @@ const ChatPage = () => {
       estado: 'enviado', created_at: new Date().toISOString(),
     };
     setMensajes(prev => [...prev, tempMsg]);
-
     setEnviando(true);
     try {
       const { data } = await api.post('/chat/mensajes', {
@@ -322,27 +334,21 @@ const ChatPage = () => {
     const file = e.target.files?.[0];
     if (!file || !convActiva) return;
     e.target.value = '';
-
     if (file.size > 5 * 1024 * 1024) return toast.error('El archivo no puede superar 5MB');
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
       const { data: upload } = await api.post('/chat/subir-archivo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       const tipo = file.type.startsWith('image/') ? 'imagen' : 'archivo';
       const tempId = `temp-${Date.now()}`;
-      const tempMsg = {
+      setMensajes(prev => [...prev, {
         id: tempId, conversacion_id: convActiva.id,
         remitente_id: usuario.id, contenido: null, tipo,
         archivo_url: upload.url, archivo_nombre: upload.nombre, archivo_tipo: upload.tipo,
         estado: 'enviado', created_at: new Date().toISOString(),
-      };
-      setMensajes(prev => [...prev, tempMsg]);
-
+      }]);
       const { data } = await api.post('/chat/mensajes', {
         conversacion_id: convActiva.id, tipo,
         archivo_url: upload.url, archivo_nombre: upload.nombre, archivo_tipo: upload.tipo,
@@ -354,7 +360,7 @@ const ChatPage = () => {
     } catch { toast.error('Error al enviar archivo'); }
   };
 
-  // ── Renderizar mensajes con separadores de fecha ──
+  // ── Renderizar mensajes con separadores ──
   const renderMensajes = () => {
     const elementos = [];
     mensajes.forEach((msg, i) => {
@@ -369,21 +375,9 @@ const ChatPage = () => {
     return elementos;
   };
 
-  // ── Panel vacío (sin conversación seleccionada) ──
-  const PanelVacio = () => (
-    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: '#EEF4F6' }}>
-        <FiMessageSquare size={36} style={{ color: '#1F4E5F' }} />
-      </div>
-      <p className="text-lg font-bold text-gray-700">Mensajes</p>
-      <p className="text-sm text-gray-400 mt-1">Selecciona una conversación para comenzar</p>
-    </div>
-  );
-
-  // ── Panel info contacto (barra lateral derecha) ──
+  // ── Panel info lateral ──
   const PanelInfo = () => (
-    <div className="w-72 border-l border-gray-200 bg-white flex flex-col">
+    <div className="w-64 border-l border-gray-200 bg-white flex flex-col shrink-0">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         <p className="font-semibold text-gray-800 text-sm">Información</p>
         <button onClick={() => setMostrarPanel(false)}
@@ -409,26 +403,45 @@ const ChatPage = () => {
       </div>
       <div className="p-4 text-center">
         <p className="text-xs text-gray-400">
-          Grupos, archivos compartidos y más opciones estarán disponibles próximamente.
+          Más opciones estarán disponibles próximamente.
         </p>
       </div>
     </div>
   );
 
+  // ── Panel vacío ──
+  const PanelVacio = () => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
+      <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
+        style={{ background: '#EEF4F6' }}>
+        <FiMessageSquare size={36} style={{ color: '#1F4E5F' }} />
+      </div>
+      <p className="text-lg font-bold text-gray-700">Mensajes</p>
+      <p className="text-sm text-gray-400 mt-1 text-center px-6">
+        Selecciona una conversación o busca un usuario para comenzar
+      </p>
+    </div>
+  );
+
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white">
+    // Ocupa exactamente el espacio del main sin scroll externo
+    <div className="flex overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white"
+      style={{ height: 'calc(100vh - 7rem)' }}>
 
-      {/* ── PANEL IZQUIERDO: lista de conversaciones ── */}
-      <div className={`${vistaMovil === 'chat' ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-80 lg:w-96 border-r border-gray-200 shrink-0`}>
+      {/* ── PANEL IZQUIERDO ── */}
+      <div className={`
+        flex flex-col border-r border-gray-200 shrink-0
+        ${vistaMovil === 'chat' ? 'hidden md:flex' : 'flex'}
+        w-full md:w-80 lg:w-96
+      `}>
 
-        {/* Header */}
-        <div className="p-4 border-b border-gray-100" style={{ background: '#1F4E5F' }}>
+        {/* Header del panel */}
+        <div className="p-4 border-b border-gray-100 shrink-0" style={{ background: '#1F4E5F' }}>
           <p className="text-base font-bold text-white mb-3">Mensajes</p>
-          {/* Buscador */}
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={14} />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar usuario por nombre o correo..."
+              placeholder="Buscar usuario..."
               className="w-full pl-9 pr-8 py-2 rounded-xl text-sm bg-white/10 text-white placeholder-white/50 focus:outline-none focus:bg-white/20 transition" />
             {busqueda && (
               <button onClick={() => { setBusqueda(''); setResultados([]); }}
@@ -439,9 +452,9 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Resultados de búsqueda */}
+        {/* Resultados búsqueda */}
         {(resultados.length > 0 || buscando) && (
-          <div className="border-b border-gray-200 bg-white max-h-56 overflow-y-auto shadow-inner">
+          <div className="border-b border-gray-200 bg-white max-h-48 overflow-y-auto shrink-0">
             {buscando ? (
               <div className="flex justify-center py-4">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600" />
@@ -465,7 +478,7 @@ const ChatPage = () => {
           </div>
         )}
 
-        {/* Lista de conversaciones */}
+        {/* Lista conversaciones — scroll solo aquí */}
         <div className="flex-1 overflow-y-auto">
           {conversaciones.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
@@ -480,37 +493,39 @@ const ChatPage = () => {
             conversaciones.map(conv => (
               <TarjetaConversacion key={conv.id} conv={conv}
                 activa={convActiva?.id === conv.id}
-                onClick={() => { cargarMensajes(conv.id); setVistaMovil('chat'); }} />
+                onClick={() => {
+                  cargarMensajes(conv.id);
+                  setVistaMovil('chat');
+                }} />
             ))
           )}
         </div>
       </div>
 
-      {/* ── PANEL DERECHO: chat activo ── */}
-      <div className={`${vistaMovil === 'lista' ? 'hidden' : 'flex'} md:flex flex-1 flex-col min-w-0`}>
+      {/* ── PANEL DERECHO: chat ── */}
+      <div className={`
+        flex-1 flex flex-col min-w-0 overflow-hidden
+        ${vistaMovil === 'lista' ? 'hidden md:flex' : 'flex'}
+      `}>
         {!convActiva ? <PanelVacio /> : (
           <>
             {/* Header del chat */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
               <div className="flex items-center gap-3">
-                {/* Botón volver en móvil */}
-                <button onClick={() => setVistaMovil('lista')}
+                <button onClick={() => { setVistaMovil('lista'); setMostrarPanel(false); }}
                   className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 -ml-1">
                   <FiChevronLeft size={20} />
                 </button>
-
                 <button onClick={() => setMostrarPanel(p => !p)}
                   className="flex items-center gap-3 hover:opacity-80 transition">
-                  <div className="relative">
-                    {convActiva.contacto?.foto_url
-                      ? <img src={convActiva.contacto.foto_url} alt=""
-                          className="w-9 h-9 rounded-full object-cover" />
-                      : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                          style={{ background: '#1F4E5F' }}>
-                          {convActiva.contacto?.nombre_completo?.[0]}
-                        </div>
-                    }
-                  </div>
+                  {convActiva.contacto?.foto_url
+                    ? <img src={convActiva.contacto.foto_url} alt=""
+                        className="w-9 h-9 rounded-full object-cover" />
+                    : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                        style={{ background: '#1F4E5F' }}>
+                        {convActiva.contacto?.nombre_completo?.[0]}
+                      </div>
+                  }
                   <div className="text-left">
                     <p className="text-sm font-semibold text-gray-800 leading-tight">
                       {convActiva.contacto?.nombre_completo}
@@ -519,14 +534,13 @@ const ChatPage = () => {
                   </div>
                 </button>
               </div>
-
               <button onClick={() => setMostrarPanel(p => !p)}
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition">
                 <FiMoreVertical size={18} />
               </button>
             </div>
 
-            {/* Área de mensajes */}
+            {/* Mensajes — scroll solo aquí */}
             <div className="flex-1 overflow-y-auto px-4 py-4"
               style={{ background: '#F0EDE8' }}>
               {cargandoMsgs ? (
@@ -547,10 +561,9 @@ const ChatPage = () => {
               )}
             </div>
 
-            {/* Input de mensaje */}
+            {/* Input */}
             <div className="px-4 py-3 bg-white border-t border-gray-200 shrink-0">
               <div className="flex items-end gap-2">
-                {/* Adjuntar archivo */}
                 <input ref={fileInputRef} type="file" className="hidden"
                   accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
                   onChange={enviarArchivo} />
@@ -558,27 +571,19 @@ const ChatPage = () => {
                   className="p-2.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition shrink-0">
                   <FiPaperclip size={18} />
                 </button>
-
-                {/* Input de texto */}
-                <div className="flex-1 relative">
-                  <textarea
-                    ref={inputRef}
-                    value={texto}
-                    onChange={e => setTexto(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        enviarMensaje();
-                      }
-                    }}
-                    placeholder="Escribe un mensaje..."
-                    rows={1}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 max-h-32"
-                    style={{ lineHeight: '1.5' }}
-                  />
-                </div>
-
-                {/* Botón enviar */}
+                <textarea
+                  value={texto}
+                  onChange={e => setTexto(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      enviarMensaje();
+                    }
+                  }}
+                  placeholder="Escribe un mensaje..."
+                  rows={1}
+                  className="flex-1 border border-gray-300 rounded-2xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 max-h-28"
+                />
                 <button onClick={enviarMensaje}
                   disabled={!texto.trim() || enviando}
                   className="p-2.5 rounded-xl transition shrink-0 disabled:opacity-40"
@@ -586,7 +591,7 @@ const ChatPage = () => {
                   <FiSend size={18} className={texto.trim() ? 'text-white' : 'text-gray-400'} />
                 </button>
               </div>
-              <p className="text-xs text-gray-300 mt-1.5 text-right">
+              <p className="text-xs text-gray-300 mt-1 text-right">
                 Enter para enviar · Shift+Enter para nueva línea
               </p>
             </div>
