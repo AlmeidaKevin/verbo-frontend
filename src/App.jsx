@@ -21,6 +21,7 @@ import ChecklistPage from './pages/admin/ChecklistPage';
 import PublicacionesAdminPage from './pages/admin/PublicacionesAdminPage';
 import ReportesPage from './pages/admin/ReportesPage';
 import PerfilPage from './pages/shared/PerfilPage';
+import ChatPage from './pages/chat/ChatPage';
 
 // Docente
 import DocenteLayout from './components/shared/DocenteLayout';
@@ -91,6 +92,7 @@ function App() {
             <Route path="publicaciones" element={<PublicacionesAdminPage />} />
             <Route path="reportes" element={<ReportesPage />} />
             <Route path="perfil" element={<PerfilPage />} />
+            <Route path="chat" element={<ChatPage />} />
           </Route>
 
           {/* Docente */}
@@ -102,6 +104,7 @@ function App() {
             <Route path="tareas" element={<TareasPage />} />
             <Route path="publicaciones" element={<PublicacionesDocentePage />} />
             <Route path="perfil" element={<PerfilPage />} />
+            <Route path="chat" element={<ChatPage />} />
           </Route>
 
           {/* Ayudante */}
@@ -110,6 +113,7 @@ function App() {
             <Route path="checklist" element={<ChecklistAyudantePage />} />
             <Route path="avisos" element={<AvisosAyudantePage />} />
             <Route path="perfil" element={<PerfilPage />} />
+            <Route path="chat" element={<ChatPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
