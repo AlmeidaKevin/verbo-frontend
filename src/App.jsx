@@ -8,7 +8,7 @@ import LoginPage from './pages/auth/LoginPage';
 import OlvidePasswordPage from './pages/auth/OlvidePasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import VerificarCuentaPage from './pages/auth/VerificarCuentaPage';
-import PaginaPublica from './pages/PaginaPublica';
+import PaginaPublica from './pages/publico/PaginaPublica';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UsuariosPage from './pages/admin/UsuariosPage';
 import NinosPage from './pages/admin/NinosPage';
