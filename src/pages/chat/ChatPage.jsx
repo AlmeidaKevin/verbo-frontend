@@ -48,7 +48,7 @@ const BurbujaMensaje = ({ msg, esMio }) => {
     <div className={`flex ${esMio ? 'justify-end' : 'justify-start'} mb-1`}>
       <div className={`max-w-[72%] sm:max-w-[60%] rounded-2xl px-3 py-2 shadow-sm ${
         esMio ? 'rounded-tr-sm text-white' : 'rounded-tl-sm bg-white text-gray-800 border border-gray-100'
-      }`} style={esMio ? { background: '#1F4E5F' } : {}}>
+      }`} style={esMio ? { background: 'var(--p600)' } : {}}>
 
         {esArch && (
           imgTipo ? (
@@ -125,7 +125,7 @@ const TarjetaConversacion = ({ conv, activa, onClick }) => {
               className={`w-11 h-11 rounded-full object-cover ${!esConocido ? 'grayscale' : ''}`} />
           : <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white ${
               !esConocido ? 'bg-gray-400' : ''
-            }`} style={esConocido ? { background: '#1F4E5F' } : {}}>
+            }`} style={esConocido ? { background: 'var(--p600)' } : {}}>
               {conv.contacto.nombre_completo[0]}
             </div>
         }
@@ -151,7 +151,7 @@ const TarjetaConversacion = ({ conv, activa, onClick }) => {
           <p className="text-xs text-gray-400 truncate">{previewTexto()}</p>
           {conv.no_leidos > 0 && (
             <span className="w-5 h-5 rounded-full text-white text-xs flex items-center justify-center shrink-0 font-bold"
-              style={{ background: '#1F4E5F', minWidth: 20 }}>
+              style={{ background: 'var(--p600)', minWidth: 20 }}>
               {conv.no_leidos > 9 ? '9+' : conv.no_leidos}
             </span>
           )}
@@ -390,14 +390,14 @@ const ChatPage = () => {
           ? <img src={convActiva.contacto.foto_url} alt=""
               className="w-20 h-20 rounded-full object-cover mx-auto mb-3" />
           : <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-3"
-              style={{ background: '#1F4E5F' }}>
+              style={{ background: 'var(--p600)' }}>
               {convActiva?.contacto?.nombre_completo?.[0]}
             </div>
         }
         <p className="font-bold text-gray-800">{convActiva?.contacto?.nombre_completo}</p>
         <p className="text-xs text-gray-400 mt-1">{convActiva?.contacto?.email}</p>
         <span className="inline-block mt-2 text-xs px-2.5 py-1 rounded-full font-medium"
-          style={{ background: '#EEF4F6', color: '#1F4E5F' }}>
+          style={{ background: 'var(--p50)', color: 'var(--p600)' }}>
           {convActiva?.contacto?.rol || 'Usuario'}
         </span>
       </div>
@@ -413,8 +413,8 @@ const ChatPage = () => {
   const PanelVacio = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
       <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: '#EEF4F6' }}>
-        <FiMessageSquare size={36} style={{ color: '#1F4E5F' }} />
+        style={{ background: 'var(--p50)' }}>
+        <FiMessageSquare size={36} style={{ color: 'var(--p600)' }} />
       </div>
       <p className="text-lg font-bold text-gray-700">Mensajes</p>
       <p className="text-sm text-gray-400 mt-1 text-center px-6">
@@ -426,7 +426,7 @@ const ChatPage = () => {
   return (
     // Ocupa exactamente el espacio del main sin scroll externo
     <div className="flex overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white"
-      style={{ height: 'calc(100vh - 7rem)' }}>
+      style={{ height: 'calc(100vh - 8.5rem)' }}>
 
       {/* ── PANEL IZQUIERDO ── */}
       <div className={`
@@ -436,7 +436,7 @@ const ChatPage = () => {
       `}>
 
         {/* Header del panel */}
-        <div className="p-4 border-b border-gray-100 shrink-0" style={{ background: '#1F4E5F' }}>
+        <div className="p-4 border-b border-gray-100 shrink-0" style={{ background: 'var(--p600)' }}>
           <p className="text-base font-bold text-white mb-3">Mensajes</p>
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={14} />
@@ -465,7 +465,7 @@ const ChatPage = () => {
                 {u.foto_url
                   ? <img src={u.foto_url} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
                   : <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: '#1F4E5F' }}>
+                      style={{ background: 'var(--p600)' }}>
                       {u.nombre_completo[0]}
                     </div>
                 }
@@ -483,8 +483,8 @@ const ChatPage = () => {
           {conversaciones.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
-                style={{ background: '#EEF4F6' }}>
-                <FiUser size={22} style={{ color: '#1F4E5F' }} />
+                style={{ background: 'var(--p50)' }}>
+                <FiUser size={22} style={{ color: 'var(--p600)' }} />
               </div>
               <p className="text-sm font-semibold text-gray-600">Sin conversaciones</p>
               <p className="text-xs text-gray-400 mt-1">Busca un usuario arriba para comenzar</p>
@@ -522,7 +522,7 @@ const ChatPage = () => {
                     ? <img src={convActiva.contacto.foto_url} alt=""
                         className="w-9 h-9 rounded-full object-cover" />
                     : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                        style={{ background: '#1F4E5F' }}>
+                        style={{ background: 'var(--p600)' }}>
                         {convActiva.contacto?.nombre_completo?.[0]}
                       </div>
                   }
@@ -546,7 +546,7 @@ const ChatPage = () => {
               {cargandoMsgs ? (
                 <div className="flex justify-center py-10">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2"
-                    style={{ borderColor: '#1F4E5F' }} />
+                    style={{ borderColor: 'var(--p600)' }} />
                 </div>
               ) : mensajes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -587,7 +587,7 @@ const ChatPage = () => {
                 <button onClick={enviarMensaje}
                   disabled={!texto.trim() || enviando}
                   className="p-2.5 rounded-xl transition shrink-0 disabled:opacity-40"
-                  style={{ background: texto.trim() ? '#1F4E5F' : '#E5E7EB' }}>
+                  style={{ background: texto.trim() ? 'var(--p600)' : '#E5E7EB' }}>
                   <FiSend size={18} className={texto.trim() ? 'text-white' : 'text-gray-400'} />
                 </button>
               </div>
