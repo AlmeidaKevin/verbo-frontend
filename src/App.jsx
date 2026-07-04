@@ -4,8 +4,9 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Layouts
-import AdminLayout from './layouts/AdminLayout';
-import { DocenteLayout, AyudanteLayout } from './layouts/DocenteLayout';
+import AdminLayout from './components/shared/AdminLayout';
+import { DocenteLayout, AyudanteLayout } from './components/shared/DocenteLayout';
+
 
 // Auth
 import LoginPage from './pages/auth/LoginPage';
