@@ -5,8 +5,8 @@ import {
   FiBell, FiUser, FiLogOut, FiChevronLeft, FiChevronRight,
   FiBook, FiUserCheck, FiMessageSquare
 } from 'react-icons/fi';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',     icon: FiHome,        label: 'Dashboard' },
