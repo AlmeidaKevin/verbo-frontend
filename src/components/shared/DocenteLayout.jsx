@@ -271,7 +271,7 @@ export const DocenteLayout = buildLayout([
 export const AyudanteLayout = buildLayout([
   { to: '/ayudante/dashboard', icon: FiHome,          label: 'Dashboard' },
   { to: '/ayudante/checklist', icon: FiCheckSquare,   label: 'Checklist' },
-  { to: '/ayudante/avisos',    icon: FiBell,          label: 'Publicaciones' },
+  { to: '/ayudante/avisos',    icon: FiBell,          label: 'Avisos' },
   { to: '/ayudante/chat',      icon: FiMessageSquare, label: 'Chat' },
   { to: '/ayudante/perfil',    icon: FiUser,          label: 'Mi Perfil' },
 ], 'Ayudante', 'violet', 'avisos', 'chat');
