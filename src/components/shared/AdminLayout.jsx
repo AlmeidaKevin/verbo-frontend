@@ -39,8 +39,19 @@ const AdminLayout = () => {
       } catch {}
     };
     cargar();
-    const interval = setInterval(cargar, 30000);
-    return () => clearInterval(interval);
+  
+    // Realtime — cuando se inserta una publicación nueva
+    const canal = supabase
+      .channel('badge-publicaciones')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'publicaciones'
+      }, () => cargar())
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'publicaciones_vistas'
+      }, () => cargar())
+      .subscribe();
+  
+    return () => supabase.removeChannel(canal);
   }, []);
 
   useEffect(() => {
