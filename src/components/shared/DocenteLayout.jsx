@@ -87,9 +87,18 @@ const buildLayout = (navItems, rolLabel, color, pubPath, chatPath) => {
         } catch {}
       };
       cargar();
-      const interval = setInterval(cargar, 15000);
-      return () => clearInterval(interval);
+    
+      // Realtime — cuando llega un mensaje nuevo
+      const canal = supabase
+        .channel('badge-chat')
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'mensajes'
+        }, () => cargar())
+        .subscribe();
+    
+      return () => supabase.removeChannel(canal);
     }, []);
+
 
     // Resetear badge chat al navegar al chat
     useEffect(() => {
