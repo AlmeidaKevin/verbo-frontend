@@ -46,6 +46,7 @@ const buildLayout = (navItems, rolLabel, color, pubPath, chatPath) => {
     const [noLeidosChat, setNoLeidosChat] = useState(0);
 
     // Badge publicaciones
+
     useEffect(() => {
       const cargar = async () => {
         try {
@@ -54,8 +55,19 @@ const buildLayout = (navItems, rolLabel, color, pubPath, chatPath) => {
         } catch {}
       };
       cargar();
-      const interval = setInterval(cargar, 30000);
-      return () => clearInterval(interval);
+    
+      // Realtime — cuando se inserta una publicación nueva
+      const canal = supabase
+        .channel('badge-publicaciones')
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'publicaciones'
+        }, () => cargar())
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'publicaciones_vistas'
+        }, () => cargar())
+        .subscribe();
+    
+      return () => supabase.removeChannel(canal);
     }, []);
 
     // Resetear badge publicaciones al navegar a la página de publicaciones
