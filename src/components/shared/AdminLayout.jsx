@@ -60,6 +60,7 @@ const AdminLayout = () => {
   }, [location.pathname]);
 
   // Badge chat
+
   useEffect(() => {
     const cargar = async () => {
       try {
@@ -68,9 +69,18 @@ const AdminLayout = () => {
       } catch {}
     };
     cargar();
-    const interval = setInterval(cargar, 15000);
-    return () => clearInterval(interval);
+  
+    // Realtime — cuando llega un mensaje nuevo
+    const canal = supabase
+      .channel('badge-chat')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'mensajes'
+      }, () => cargar())
+      .subscribe();
+  
+    return () => supabase.removeChannel(canal);
   }, []);
+
 
   useEffect(() => {
     if (location.pathname.includes('chat')) setNoLeidosChat(0);
