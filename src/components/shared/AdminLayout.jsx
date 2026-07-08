@@ -109,12 +109,6 @@ const AdminLayout = () => {
           )}
         </span>
         {!colapsado && <span className="flex-1">{label}</span>}
-        {!colapsado && badge > 0 && (
-          <span className="ml-auto bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold leading-none"
-            style={{ fontSize: 10 }}>
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
       </NavLink>
     );
   };
@@ -137,12 +131,6 @@ const AdminLayout = () => {
           )}
         </span>
         <span className="flex-1">{label}</span>
-        {badge > 0 && (
-          <span className="ml-auto bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold"
-            style={{ fontSize: 10 }}>
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
       </NavLink>
     );
   };
