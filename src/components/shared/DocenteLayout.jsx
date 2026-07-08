@@ -50,7 +50,7 @@ const buildLayout = (navItems, rolLabel, color, pubPath, chatPath) => {
       const cargar = async () => {
         try {
           const { data } = await api.get('/publicaciones/no-vistas');
-          setNoLeidosPub(data.count || 0);
+          setNoLeidosPub(data.no_vistas || 0);
         } catch {}
       };
       cargar();
