@@ -6,6 +6,7 @@ import {
   FiMessageSquare
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import supabase from '../../config/supabase';
 import api from '../../services/api';
 
 const COLORES = {
