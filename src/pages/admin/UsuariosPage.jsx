@@ -9,8 +9,8 @@ import { useAuth } from '../../context/AuthContext';
 const SUPER_ADMIN_EMAIL = 'almeidakevin783@gmail.com';
 
 const ROLES = [
-  { value: 'admin', label: 'Administrador' },
-  { value: 'docente', label: 'Docente / Líder' },
+  { value: 'admin',    label: 'Administrador' },
+  { value: 'docente',  label: 'Docente / Líder' },
   { value: 'ayudante', label: 'Ayudante / Colaborador' },
 ];
 
@@ -51,20 +51,30 @@ const InfoTooltip = ({ texto }) => {
   );
 };
 
+// Campo de formulario con error inline
+const Campo = ({ label, error, children }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    {children}
+    {error && <p className="text-red-500 text-xs mt-1 flex items-center gap-1">⚠ {error.message}</p>}
+  </div>
+);
+
 const UsuariosPage = () => {
   const { usuario: usuarioActual } = useAuth();
   const esSuperAdmin = usuarioActual?.email === SUPER_ADMIN_EMAIL;
 
-  const [usuarios, setUsuarios] = useState([]);
-  const [filtro, setFiltro] = useState('');
-  const [rolFiltro, setRolFiltro] = useState('');
-  const [estadoFiltro, setEstadoFiltro] = useState('');
-  const [modal, setModal] = useState(false);
-  const [editando, setEditando] = useState(null);
-  const [verPass, setVerPass] = useState(false);
-  const [cargando, setCargando] = useState(false);
+  const [usuarios, setUsuarios]           = useState([]);
+  const [filtro, setFiltro]               = useState('');
+  const [rolFiltro, setRolFiltro]         = useState('');
+  const [estadoFiltro, setEstadoFiltro]   = useState('');
+  const [modal, setModal]                 = useState(false);
+  const [editando, setEditando]           = useState(null);
+  const [verPass, setVerPass]             = useState(false);
+  const [cargando, setCargando]           = useState(false);
   const [dropdownAbierto, setDropdownAbierto] = useState(null);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({ mode: 'onSubmit' });
 
   useEffect(() => { cargar(); }, []);
 
@@ -81,30 +91,46 @@ const UsuariosPage = () => {
     setEditando(usuario);
     setVerPass(false);
     reset(usuario
-      ? { nombre_completo: usuario.nombre_completo, cedula: usuario.cedula, email: usuario.email, telefono: usuario.telefono, rol: usuario.rol, password: '' }
+      ? { nombre_completo: usuario.nombre_completo, cedula: usuario.cedula,
+          email: usuario.email, telefono: usuario.telefono, rol: usuario.rol, password: '' }
       : { nombre_completo: '', cedula: '', email: '', telefono: '', rol: 'docente', password: '' });
     setModal(true);
   };
 
-  const cerrar = () => { setModal(false); setEditando(null); };
+  const cerrar = () => { setModal(false); setEditando(null); reset(); };
 
   const onSubmit = async (datos) => {
     setCargando(true);
     try {
       if (editando) {
         const { data } = await api.put(`/usuarios/${editando.id}`, {
-          nombre_completo: datos.nombre_completo, cedula: datos.cedula,
-          email: datos.email, telefono: datos.telefono, rol: datos.rol,
+          nombre_completo: datos.nombre_completo,
+          cedula: datos.cedula,
+          email: datos.email.toLowerCase(),
+          telefono: datos.telefono,
+          rol: datos.rol,
         });
         setUsuarios(prev => prev.map(u => u.id === editando.id ? { ...u, ...data.usuario } : u));
         toast.success('Usuario actualizado');
       } else {
-        const { data } = await api.post('/auth/crear-usuario', datos);
+        const { data } = await api.post('/auth/crear-usuario', {
+          ...datos,
+          email: datos.email.toLowerCase(),
+        });
         setUsuarios(prev => [data.usuario, ...prev]);
         toast.success('Usuario creado. Se envió email de verificación.');
       }
       cerrar();
-    } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar usuario'); }
+    } catch (err) {
+      const msg = err.response?.data?.message || '';
+      if (msg.toLowerCase().includes('cedula') || msg.toLowerCase().includes('cédula')) {
+        toast.error('Ya existe un usuario con ese número de cédula');
+      } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('correo')) {
+        toast.error('Ya existe un usuario con ese correo electrónico');
+      } else {
+        toast.error(msg || 'Error al guardar usuario');
+      }
+    }
     finally { setCargando(false); }
   };
 
@@ -118,10 +144,8 @@ const UsuariosPage = () => {
   };
 
   const eliminar = async (usuario) => {
-    // Verificar si puede eliminar
-    if (usuario.rol === 'admin' && !esSuperAdmin) {
+    if (usuario.rol === 'admin' && !esSuperAdmin)
       return toast.error('Solo el administrador principal puede eliminar otros administradores');
-    }
     if (!window.confirm(`¿Eliminar permanentemente a ${usuario.nombre_completo}? Esta acción no se puede deshacer.`)) return;
     try {
       await api.delete(`/usuarios/${usuario.id}`);
@@ -133,31 +157,92 @@ const UsuariosPage = () => {
   const usuariosFiltrados = usuarios.filter(u => {
     const matchBusqueda = u.nombre_completo.toLowerCase().includes(filtro.toLowerCase()) ||
       u.email.toLowerCase().includes(filtro.toLowerCase()) || u.cedula.includes(filtro);
-    const matchRol = rolFiltro ? u.rol === rolFiltro : true;
+    const matchRol    = rolFiltro    ? u.rol === rolFiltro : true;
     const matchEstado = estadoFiltro ? (u.estado || 'pendiente') === estadoFiltro : true;
     return matchBusqueda && matchRol && matchEstado;
   });
 
-  const rolBadge = (rol) => ({ admin: 'bg-red-100 text-red-700', docente: 'bg-blue-100 text-blue-700', ayudante: 'bg-emerald-100 text-emerald-700' }[rol] || 'bg-gray-100 text-gray-600');
-  const validarSoloLetras = v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras';
-  const validarSoloNumeros = v => /^\d+$/.test(v) || 'Solo se permiten números';
+  const rolBadge = (rol) => ({
+    admin:    'bg-red-100 text-red-700',
+    docente:  'bg-blue-100 text-blue-700',
+    ayudante: 'bg-emerald-100 text-emerald-700',
+  }[rol] || 'bg-gray-100 text-gray-600');
 
-  const activos = usuarios.filter(u => u.estado === 'activada').length;
-  const pendientes = usuarios.filter(u => u.estado === 'pendiente').length;
-  const docentes = usuarios.filter(u => u.rol === 'docente').length;
-  const ayudantes = usuarios.filter(u => u.rol === 'ayudante').length;
+  const opcionesEstado = (u) =>
+    u.email_verificado ? ESTADOS.filter(e => e.value !== 'pendiente') : ESTADOS;
 
-  const opcionesEstado = (usuario) => {
-    if (usuario.email_verificado) return ESTADOS.filter(e => e.value !== 'pendiente');
-    return ESTADOS;
-  };
-
-  // Determinar si se puede mostrar el botón eliminar para un usuario
   const puedeEliminar = (u) => {
-    if (u.id === usuarioActual?.id) return false; // no puede eliminarse a sí mismo
-    if (u.rol === 'admin') return esSuperAdmin; // solo super admin puede eliminar admins
+    if (u.id === usuarioActual?.id) return false;
+    if (u.rol === 'admin') return esSuperAdmin;
     return true;
   };
+
+  // Cédulas y emails ya registrados (para validación de unicidad en frontend)
+  const cedulasExistentes = usuarios
+    .filter(u => !editando || u.id !== editando.id)
+    .map(u => u.cedula);
+  const emailsExistentes = usuarios
+    .filter(u => !editando || u.id !== editando.id)
+    .map(u => u.email.toLowerCase());
+
+  // Reglas de validación
+  const reglasNombre = {
+    required: 'El nombre completo es requerido',
+    maxLength: { value: 120, message: 'Máximo 120 caracteres' },
+    pattern: {
+      value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/,
+      message: 'Solo se permiten letras y espacios',
+    },
+  };
+
+  const reglasCedula = {
+    required: 'El número de cédula es requerido',
+    pattern: { value: /^\d+$/, message: 'Solo se permiten números' },
+    minLength: { value: 10, message: 'La cédula debe tener exactamente 10 dígitos' },
+    maxLength: { value: 10, message: 'La cédula debe tener exactamente 10 dígitos' },
+    validate: v => !cedulasExistentes.includes(v) || 'Ya existe un usuario con esta cédula',
+  };
+
+  const reglasEmail = {
+    required: 'El correo electrónico es requerido',
+    maxLength: { value: 254, message: 'Máximo 254 caracteres' },
+    pattern: {
+      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: 'Ingresa un correo electrónico válido',
+    },
+    validate: v => !emailsExistentes.includes(v.toLowerCase()) || 'Ya existe un usuario con este correo',
+  };
+
+  const reglasTelefono = {
+    required: 'El teléfono es requerido',
+    pattern: { value: /^\d+$/, message: 'Solo se permiten números' },
+    minLength: { value: 9, message: 'Mínimo 9 dígitos' },
+    maxLength: { value: 10, message: 'Máximo 10 dígitos' },
+  };
+
+  const reglasPassword = {
+    required: 'La contraseña es requerida',
+    minLength: { value: 8,   message: 'Mínimo 8 caracteres' },
+    maxLength: { value: 128, message: 'Máximo 128 caracteres' },
+    validate: {
+      mayus:    v => /[A-Z]/.test(v) || 'Debe contener al menos una mayúscula',
+      minus:    v => /[a-z]/.test(v) || 'Debe contener al menos una minúscula',
+      num:      v => /\d/.test(v)    || 'Debe contener al menos un número',
+      especial: v => /[!@#$%^&*(),.?":{}|<>\-_=+[\]\\;'/~`]/.test(v) || 'Debe contener al menos un carácter especial',
+    },
+  };
+
+  const inputClass = (field) =>
+    `w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition ${
+      errors[field]
+        ? 'border-red-400 focus:ring-red-300 bg-red-50'
+        : 'border-gray-300 focus:ring-primary-500'
+    }`;
+
+  const activos      = usuarios.filter(u => u.estado === 'activada').length;
+  const pendientes   = usuarios.filter(u => u.estado === 'pendiente').length;
+  const docentes     = usuarios.filter(u => u.rol === 'docente').length;
+  const ayudantes    = usuarios.filter(u => u.rol === 'ayudante').length;
 
   return (
     <div className="space-y-6">
@@ -168,8 +253,7 @@ const UsuariosPage = () => {
           <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white" style={{ transform: 'translate(30%,-30%)' }} />
         </div>
         <div className="relative">
-          {/* Título y botón */}
-          <div className="flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
             <div>
               <h1 className="text-xl font-bold text-white">Usuarios</h1>
               <p className="text-xs mt-0.5" style={{ color: '#9EC5D0' }}>{usuarios.length} usuarios en total</p>
@@ -180,19 +264,18 @@ const UsuariosPage = () => {
               <FiPlus size={18} /> Nuevo Usuario
             </button>
           </div>
-          {/* Stats grid */}
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {[
-              { label: 'Administradores', value: usuarios.filter(u => u.rol === 'admin').length, bg: 'bg-red-500/20', text: 'text-red-200' },
-              { label: 'Docentes', value: docentes, bg: 'bg-blue-500/20', text: 'text-blue-200' },
-              { label: 'Ayudantes', value: ayudantes, bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
-              { label: 'Activados', value: activos, bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
-              { label: 'Pendientes', value: pendientes, bg: 'bg-amber-500/20', text: 'text-amber-200' },
-              { label: 'Desactivados', value: usuarios.filter(u => u.estado === 'desactivada').length, bg: 'bg-red-500/20', text: 'text-red-200' },
+              { label: 'Administradores', value: usuarios.filter(u => u.rol === 'admin').length, bg: 'bg-red-500/20',     text: 'text-red-200' },
+              { label: 'Docentes',        value: docentes,   bg: 'bg-blue-500/20',    text: 'text-blue-200' },
+              { label: 'Ayudantes',       value: ayudantes,  bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Activados',       value: activos,    bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Pendientes',      value: pendientes, bg: 'bg-amber-500/20',   text: 'text-amber-200' },
+              { label: 'Desactivados',    value: usuarios.filter(u => u.estado === 'desactivada').length, bg: 'bg-red-500/20', text: 'text-red-200' },
             ].map(({ label, value, bg, text }) => (
-              <div key={label} className={`${bg} rounded-xl px-3 py-2.5 text-center`}>
+              <div key={label} className={`${bg} rounded-xl px-2 py-2.5 text-center`}>
                 <p className={`text-lg font-bold ${text}`}>{value}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
+                <p className="text-xs mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
               </div>
             ))}
           </div>
@@ -220,96 +303,102 @@ const UsuariosPage = () => {
       </div>
 
       {cargando ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+        </div>
       ) : (
         <>
           {/* Desktop */}
           <div className="hidden md:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-200" style={{ background: '#EEF4F6' }}>
-                <tr>
-                  {['Nombre', 'Cédula', 'Email', 'Teléfono', 'Rol', 'Estado', 'Acciones'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {usuariosFiltrados.map(u => {
-                  const est = estadoInfo(u.estado || 'pendiente');
-                  const esAdmin = u.rol === 'admin';
-                  return (
-                    <tr key={u.id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {u.foto_url
-                            ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                            : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold">{u.nombre_completo[0]}</div>}
-                          <span className="font-medium text-gray-800">{u.nombre_completo}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{u.cedula}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{u.telefono}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${rolBadge(u.rol)}`}>
-                          {ROLES.find(r => r.value === u.rol)?.label || u.rol}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {esAdmin ? (
-                          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <div className="relative">
-                              <button
-                                onClick={() => setDropdownAbierto(dropdownAbierto === u.id ? null : u.id)}
-                                className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                                {est.label}
-                                <span className="ml-0.5 opacity-60">▾</span>
-                              </button>
-                              {dropdownAbierto === u.id && (
-                                <>
-                                  <div className="fixed inset-0 z-10" onClick={() => setDropdownAbierto(null)} />
-                                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 min-w-[150px] overflow-hidden">
-                                    {opcionesEstado(u).map(op => (
-                                      <button key={op.value}
-                                        onClick={() => { cambiarEstado(u, op.value); setDropdownAbierto(null); }}
-                                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold bg-gray-50' : ''}`}>
-                                        <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
-                                        {op.label}
-                                        {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                            <InfoTooltip texto={est.info} />
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
+                <thead className="border-b border-gray-200" style={{ background: '#EEF4F6' }}>
+                  <tr>
+                    {['Nombre', 'Cédula', 'Email', 'Teléfono', 'Rol', 'Estado', 'Acciones'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {usuariosFiltrados.map(u => {
+                    const est = estadoInfo(u.estado || 'pendiente');
+                    const esAdmin = u.rol === 'admin';
+                    return (
+                      <tr key={u.id} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {u.foto_url
+                              ? <img src={u.foto_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                              : <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs font-bold shrink-0">{u.nombre_completo[0]}</div>}
+                            <span className="font-medium text-gray-800 truncate max-w-[160px]">{u.nombre_completo}</span>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => abrirModal(u)}
-                            className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
-                            title="Editar">
-                            <FiEdit2 size={14} />
-                          </button>
-                          {puedeEliminar(u) && (
-                            <button onClick={() => eliminar(u)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                              title="Eliminar">
-                              <FiTrash2 size={14} />
-                            </button>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{u.cedula}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          <span className="truncate block max-w-[180px]">{u.email}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{u.telefono}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${rolBadge(u.rol)}`}>
+                            {ROLES.find(r => r.value === u.rol)?.label || u.rol}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {esAdmin ? (
+                            <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <div className="relative">
+                                <button
+                                  onClick={() => setDropdownAbierto(dropdownAbierto === u.id ? null : u.id)}
+                                  className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                                  {est.label}
+                                  <span className="ml-0.5 opacity-60">▾</span>
+                                </button>
+                                {dropdownAbierto === u.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setDropdownAbierto(null)} />
+                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 min-w-[150px] overflow-hidden">
+                                      {opcionesEstado(u).map(op => (
+                                        <button key={op.value}
+                                          onClick={() => { cambiarEstado(u, op.value); setDropdownAbierto(null); }}
+                                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold bg-gray-50' : ''}`}>
+                                          <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
+                                          {op.label}
+                                          {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                              <InfoTooltip texto={est.info} />
+                            </div>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => abrirModal(u)}
+                              className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
+                              title="Editar">
+                              <FiEdit2 size={14} />
+                            </button>
+                            {puedeEliminar(u) && (
+                              <button onClick={() => eliminar(u)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                title="Eliminar">
+                                <FiTrash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             {usuariosFiltrados.length === 0 && (
               <div className="text-center py-10">
                 <FiUsers size={32} className="mx-auto text-gray-300 mb-2" />
@@ -325,17 +414,17 @@ const UsuariosPage = () => {
               const esAdmin = u.rol === 'admin';
               return (
                 <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
                       {u.foto_url
-                        ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                        : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">{u.nombre_completo[0]}</div>}
-                      <div>
-                        <p className="font-semibold text-gray-800 text-sm">{u.nombre_completo}</p>
+                        ? <img src={u.foto_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        : <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold shrink-0">{u.nombre_completo[0]}</div>}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-800 text-sm truncate">{u.nombre_completo}</p>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${rolBadge(u.rol)}`}>{ROLES.find(r => r.value === u.rol)?.label}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600">
                         <FiEdit2 size={16} />
                       </button>
@@ -347,7 +436,7 @@ const UsuariosPage = () => {
                     </div>
                   </div>
                   <div className="mt-3 space-y-1 text-xs text-gray-500">
-                    <p>📧 {u.email}</p>
+                    <p className="truncate">📧 {u.email}</p>
                     <p>🪪 {u.cedula} · 📞 {u.telefono}</p>
                   </div>
                   {!esAdmin && (
@@ -366,71 +455,131 @@ const UsuariosPage = () => {
                 </div>
               );
             })}
+            {usuariosFiltrados.length === 0 && (
+              <div className="text-center py-10 bg-white rounded-2xl border border-gray-200">
+                <FiUsers size={32} className="mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-400 text-sm">No se encontraron usuarios</p>
+              </div>
+            )}
           </div>
         </>
       )}
 
       {/* Modal crear/editar */}
       {modal && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
               <div>
                 <h2 className="font-bold text-gray-800">{editando ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{editando ? 'Actualiza la información del usuario' : 'Se enviará un correo de verificación'}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {editando ? 'Actualiza la información del usuario' : 'Se enviará un correo de verificación'}
+                </p>
               </div>
-              <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"><FiX /></button>
+              <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100">
+                <FiX />
+              </button>
             </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
-              {[
-                { name: 'nombre_completo', label: 'Nombre completo *', placeholder: 'Nombre y apellido', rules: { required: 'Requerido', validate: validarSoloLetras } },
-                { name: 'cedula', label: 'Número de cédula *', placeholder: '0000000000', rules: { required: 'Requerido', validate: validarSoloNumeros, minLength: { value: 8, message: 'Mínimo 8 dígitos' }, maxLength: { value: 15, message: 'Máximo 15 dígitos' } } },
-                { name: 'email', label: 'Correo electrónico *', placeholder: 'correo@ejemplo.com', type: 'email', rules: { required: 'Requerido', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Email inválido' } } },
-                { name: 'telefono', label: 'Teléfono *', placeholder: '0999999999', rules: { required: 'Requerido', validate: validarSoloNumeros, minLength: { value: 7, message: 'Mínimo 7 dígitos' } } },
-              ].map(({ name, label, placeholder, type, rules }) => (
-                <div key={name}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                  <input type={type || 'text'}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors[name] ? 'border-red-400' : 'border-gray-300'}`}
-                    placeholder={placeholder} {...register(name, rules)} />
-                  {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name].message}</p>}
-                </div>
-              ))}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
-                <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  {...register('rol', { required: 'Requerido' })}>
+
+              {/* Nombre completo */}
+              <Campo label="Nombre completo *" error={errors.nombre_completo}>
+                <input
+                  type="text"
+                  className={inputClass('nombre_completo')}
+                  placeholder="Nombre y apellido"
+                  maxLength={120}
+                  {...register('nombre_completo', reglasNombre)}
+                />
+              </Campo>
+
+              {/* Cédula */}
+              <Campo label="Número de cédula *" error={errors.cedula}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={inputClass('cedula')}
+                  placeholder="0000000000"
+                  maxLength={10}
+                  onKeyDown={e => {
+                    if (!/\d/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key))
+                      e.preventDefault();
+                  }}
+                  {...register('cedula', reglasCedula)}
+                />
+              </Campo>
+
+              {/* Email */}
+              <Campo label="Correo electrónico *" error={errors.email}>
+                <input
+                  type="email"
+                  className={inputClass('email')}
+                  placeholder="correo@ejemplo.com"
+                  maxLength={254}
+                  onInput={e => { e.target.value = e.target.value.toLowerCase(); }}
+                  {...register('email', reglasEmail)}
+                  onChange={e => {
+                    e.target.value = e.target.value.toLowerCase();
+                    setValue('email', e.target.value, { shouldValidate: false });
+                  }}
+                />
+              </Campo>
+
+              {/* Teléfono */}
+              <Campo label="Teléfono *" error={errors.telefono}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={inputClass('telefono')}
+                  placeholder="0999999999"
+                  maxLength={10}
+                  onKeyDown={e => {
+                    if (!/\d/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key))
+                      e.preventDefault();
+                  }}
+                  {...register('telefono', reglasTelefono)}
+                />
+              </Campo>
+
+              {/* Rol */}
+              <Campo label="Rol *" error={errors.rol}>
+                <select
+                  className={inputClass('rol')}
+                  {...register('rol', { required: 'El rol es requerido' })}>
                   {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
-              </div>
+              </Campo>
+
+              {/* Contraseña */}
               {!editando && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
+                <Campo label="Contraseña *" error={errors.password}>
                   <div className="relative">
-                    <input type={verPass ? 'text' : 'password'}
-                      className={`w-full border rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.password ? 'border-red-400' : 'border-gray-300'}`}
+                    <input
+                      type={verPass ? 'text' : 'password'}
+                      className={inputClass('password') + ' pr-12'}
                       placeholder="Mínimo 8 caracteres"
-                      {...register('password', {
-                        required: 'Requerida', minLength: { value: 8, message: 'Mínimo 8 caracteres' },
-                        validate: {
-                          mayus: v => /[A-Z]/.test(v) || 'Necesita una mayúscula',
-                          minus: v => /[a-z]/.test(v) || 'Necesita una minúscula',
-                          num: v => /\d/.test(v) || 'Necesita un número',
-                          especial: v => /[!@#$%^&*(),.?":{}|<>]/.test(v) || 'Necesita un carácter especial',
-                        },
-                      })} />
+                      maxLength={128}
+                      {...register('password', reglasPassword)}
+                    />
                     <button type="button" onClick={() => setVerPass(!verPass)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {verPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                     </button>
                   </div>
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
-                  <p className="text-xs text-gray-400 mt-1">Debe tener: mayúscula, minúscula, número y carácter especial</p>
-                </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Debe tener: mayúscula, minúscula, número y carácter especial (mín. 8, máx. 128 caracteres)
+                  </p>
+                </Campo>
               )}
+
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
-                <button type="submit" disabled={cargando} className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
+                <button type="button" onClick={cerrar}
+                  className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={cargando}
+                  className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
                   {cargando ? 'Guardando...' : editando ? 'Actualizar' : 'Crear Usuario'}
                 </button>
               </div>
