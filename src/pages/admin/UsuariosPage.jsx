@@ -135,7 +135,8 @@ const UsuariosPage = () => {
   };
 
   const cambiarEstado = async (usuario, nuevoEstado) => {
-    if (usuario.rol === 'admin') return toast.error('No se puede modificar el estado de un administrador');
+    if (usuario.rol === 'admin' && !esSuperAdmin && usuario.id !== usuarioActual?.id)
+      return toast.error('No puedes modificar el estado de otro administrador');
     try {
       const { data } = await api.put(`/usuarios/${usuario.id}`, { estado: nuevoEstado });
       setUsuarios(prev => prev.map(u => u.id === usuario.id ? { ...u, ...data.usuario } : u));
@@ -351,7 +352,7 @@ const UsuariosPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {esAdmin && !esSuperAdmin ? (
+                          {esAdmin && !esSuperAdmin && u.id !== usuarioActual?.id ? (
                             <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
                           ) : (
                             <div className="flex items-center gap-1">
