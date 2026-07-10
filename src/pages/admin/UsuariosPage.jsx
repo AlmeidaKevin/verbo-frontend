@@ -266,16 +266,17 @@ const UsuariosPage = () => {
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {[
-              { label: 'Administradores', value: usuarios.filter(u => u.rol === 'admin').length, bg: 'bg-red-500/20',     text: 'text-red-200' },
-              { label: 'Docentes',        value: docentes,   bg: 'bg-blue-500/20',    text: 'text-blue-200' },
-              { label: 'Ayudantes',       value: ayudantes,  bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
-              { label: 'Activados',       value: activos,    bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
-              { label: 'Pendientes',      value: pendientes, bg: 'bg-amber-500/20',   text: 'text-amber-200' },
-              { label: 'Desactivados',    value: usuarios.filter(u => u.estado === 'desactivada').length, bg: 'bg-red-500/20', text: 'text-red-200' },
-            ].map(({ label, value, bg, text }) => (
-              <div key={label} className={`${bg} rounded-xl px-2 py-2.5 text-center`}>
+              { label: 'Administradores', labelSm: 'Admins',      value: usuarios.filter(u => u.rol === 'admin').length, bg: 'bg-red-500/20',     text: 'text-red-200' },
+              { label: 'Docentes',        labelSm: 'Docentes',    value: docentes,   bg: 'bg-blue-500/20',    text: 'text-blue-200' },
+              { label: 'Ayudantes',       labelSm: 'Ayudantes',   value: ayudantes,  bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Activados',       labelSm: 'Activos',     value: activos,    bg: 'bg-emerald-500/20', text: 'text-emerald-200' },
+              { label: 'Pendientes',      labelSm: 'Pendientes',  value: pendientes, bg: 'bg-amber-500/20',   text: 'text-amber-200' },
+              { label: 'Desactivados',    labelSm: 'Inactivos',   value: usuarios.filter(u => u.estado === 'desactivada').length, bg: 'bg-red-500/20', text: 'text-red-200' },
+            ].map(({ label, labelSm, value, bg, text }) => (
+              <div key={label} className={`${bg} rounded-xl px-1 py-2.5 text-center overflow-hidden`}>
                 <p className={`text-lg font-bold ${text}`}>{value}</p>
-                <p className="text-xs mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
+                <p className="text-xs mt-0.5 leading-tight sm:hidden" style={{ color: 'rgba(255,255,255,0.55)' }}>{labelSm}</p>
+                <p className="text-xs mt-0.5 leading-tight hidden sm:block" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
               </div>
             ))}
           </div>
