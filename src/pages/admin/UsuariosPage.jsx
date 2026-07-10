@@ -177,6 +177,12 @@ const UsuariosPage = () => {
     return true;
   };
 
+  const puedeEditar = (u) => {
+    if (u.id === usuarioActual?.id) return true; // siempre puede editarse a sí mismo
+    if (u.rol === 'admin') return esSuperAdmin;  // solo super admin edita otros admins
+    return true;
+  };
+
   // Cédulas y emails ya registrados (para validación de unicidad en frontend)
   const cedulasExistentes = usuarios
     .filter(u => !editando || u.id !== editando.id)
@@ -345,7 +351,7 @@ const UsuariosPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {esAdmin ? (
+                          {esAdmin && !esSuperAdmin ? (
                             <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
                           ) : (
                             <div className="flex items-center gap-1">
@@ -380,11 +386,13 @@ const UsuariosPage = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <button onClick={() => abrirModal(u)}
-                              className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
-                              title="Editar">
-                              <FiEdit2 size={14} />
-                            </button>
+                            {puedeEditar(u) && (
+                              <button onClick={() => abrirModal(u)}
+                                className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
+                                title="Editar">
+                                <FiEdit2 size={14} />
+                              </button>
+                            )}
                             {puedeEliminar(u) && (
                               <button onClick={() => eliminar(u)}
                                 className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
