@@ -51,6 +51,61 @@ const InfoTooltip = ({ texto }) => {
   );
 };
 
+// Menú de cambio de estado, renderizado en portal para no quedar recortado
+// por el overflow-hidden del contenedor de la tabla
+const EstadoDropdown = ({ usuario, estado, onSeleccionar }) => {
+  const [pos, setPos] = useState(null); // { top, left, openUp }
+  const btnRef = useRef(null);
+
+  const abrir = () => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const alturaMenu = 40 * 3 + 8; // estimado: 3 opciones
+    const openUp = rect.bottom + alturaMenu > window.innerHeight;
+    setPos({
+      top: openUp ? rect.top - alturaMenu - 6 : rect.bottom + 6,
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - 166)),
+    });
+  };
+
+  const cerrar = () => setPos(null);
+
+  const est = estadoInfo(usuario.estado || 'pendiente');
+  const opciones = usuario.email_verificado ? ESTADOS.filter(e => e.value !== 'pendiente') : ESTADOS;
+
+  return (
+    <div className="relative inline-block">
+      <button
+        ref={btnRef}
+        onClick={() => (pos ? cerrar() : abrir())}
+        className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+        {est.label}
+        <span className="ml-0.5 opacity-60">▾</span>
+      </button>
+      {pos && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={cerrar} />
+          <div
+            className="fixed bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] min-w-[150px] overflow-hidden"
+            style={{ top: pos.top, left: pos.left }}>
+            {opciones.map(op => (
+              <button key={op.value}
+                onClick={() => { onSeleccionar(op.value); cerrar(); }}
+                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition ${op.value === usuario.estado ? 'font-semibold bg-gray-50' : ''}`}>
+                <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
+                {op.label}
+                {op.value === usuario.estado && <span className="ml-auto text-primary-600">✓</span>}
+              </button>
+            ))}
+          </div>
+        </>,
+        document.body
+      )}
+    </div>
+  );
+};
+
 // Campo de formulario con error inline
 const Campo = ({ label, error, children }) => (
   <div>
@@ -72,7 +127,6 @@ const UsuariosPage = () => {
   const [editando, setEditando]           = useState(null);
   const [verPass, setVerPass]             = useState(false);
   const [cargando, setCargando]           = useState(false);
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({ mode: 'onSubmit' });
 
@@ -135,8 +189,8 @@ const UsuariosPage = () => {
   };
 
   const cambiarEstado = async (usuario, nuevoEstado) => {
-    if (usuario.rol === 'admin' && !esSuperAdmin && usuario.id !== usuarioActual?.id)
-      return toast.error('No puedes modificar el estado de otro administrador');
+    if (!puedeCambiarEstado(usuario))
+      return toast.error('No tienes permiso para cambiar el estado de este usuario');
     try {
       const { data } = await api.put(`/usuarios/${usuario.id}`, { estado: nuevoEstado });
       setUsuarios(prev => prev.map(u => u.id === usuario.id ? { ...u, ...data.usuario } : u));
@@ -169,11 +223,18 @@ const UsuariosPage = () => {
     ayudante: 'bg-emerald-100 text-emerald-700',
   }[rol] || 'bg-gray-100 text-gray-600');
 
-  const opcionesEstado = (u) =>
-    u.email_verificado ? ESTADOS.filter(e => e.value !== 'pendiente') : ESTADOS;
+  // Regla centralizada: quién puede cambiar el estado de quién
+  const puedeCambiarEstado = (u) => {
+    if (u.rol !== 'admin') return true; // docentes y ayudantes: sin restricción
+    const filaEsSuperAdmin = u.email === SUPER_ADMIN_EMAIL;
+    if (filaEsSuperAdmin) return false; // nadie cambia el estado del super admin, ni él mismo
+    if (esSuperAdmin) return true; // el super admin cambia el estado de cualquier otro admin
+    return u.id === usuarioActual?.id; // un admin regular solo cambia el suyo
+  };
 
   const puedeEliminar = (u) => {
     if (u.id === usuarioActual?.id) return false;
+    if (u.email === SUPER_ADMIN_EMAIL) return false;
     if (u.rol === 'admin') return esSuperAdmin;
     return true;
   };
@@ -330,7 +391,7 @@ const UsuariosPage = () => {
                 <tbody className="divide-y divide-gray-100">
                   {usuariosFiltrados.map(u => {
                     const est = estadoInfo(u.estado || 'pendiente');
-                    const esAdmin = u.rol === 'admin';
+                    const puedeEstado = puedeCambiarEstado(u);
                     return (
                       <tr key={u.id} className="hover:bg-gray-50 transition">
                         <td className="px-4 py-3">
@@ -352,37 +413,19 @@ const UsuariosPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {esAdmin && !esSuperAdmin && u.id !== usuarioActual?.id ? (
-                            <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">Admin</span>
-                          ) : (
+                          {puedeEstado ? (
                             <div className="flex items-center gap-1">
-                              <div className="relative">
-                                <button
-                                  onClick={() => setDropdownAbierto(dropdownAbierto === u.id ? null : u.id)}
-                                  className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${est.color}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                                  {est.label}
-                                  <span className="ml-0.5 opacity-60">▾</span>
-                                </button>
-                                {dropdownAbierto === u.id && (
-                                  <>
-                                    <div className="fixed inset-0 z-10" onClick={() => setDropdownAbierto(null)} />
-                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 min-w-[150px] overflow-hidden">
-                                      {opcionesEstado(u).map(op => (
-                                        <button key={op.value}
-                                          onClick={() => { cambiarEstado(u, op.value); setDropdownAbierto(null); }}
-                                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition ${op.value === u.estado ? 'font-semibold bg-gray-50' : ''}`}>
-                                          <span className={`w-2 h-2 rounded-full ${op.dot} shrink-0`} />
-                                          {op.label}
-                                          {op.value === u.estado && <span className="ml-auto text-primary-600">✓</span>}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
+                              <EstadoDropdown
+                                usuario={u}
+                                estado={u.estado}
+                                onSeleccionar={(nuevoEstado) => cambiarEstado(u, nuevoEstado)}
+                              />
                               <InfoTooltip texto={est.info} />
                             </div>
+                          ) : (
+                            <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">
+                              {u.email === SUPER_ADMIN_EMAIL ? 'Super Admin' : 'Admin'}
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -420,8 +463,7 @@ const UsuariosPage = () => {
           {/* Mobile */}
           <div className="md:hidden space-y-3">
             {usuariosFiltrados.map(u => {
-              const est = estadoInfo(u.estado || 'pendiente');
-              const esAdmin = u.rol === 'admin';
+              const puedeEstado = puedeCambiarEstado(u);
               return (
                 <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
@@ -435,9 +477,11 @@ const UsuariosPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600">
-                        <FiEdit2 size={16} />
-                      </button>
+                      {puedeEditar(u) && (
+                        <button onClick={() => abrirModal(u)} className="p-2 text-gray-400 hover:text-primary-600">
+                          <FiEdit2 size={16} />
+                        </button>
+                      )}
                       {puedeEliminar(u) && (
                         <button onClick={() => eliminar(u)} className="p-2 text-gray-400 hover:text-red-500">
                           <FiTrash2 size={16} />
@@ -449,9 +493,9 @@ const UsuariosPage = () => {
                     <p className="truncate">📧 {u.email}</p>
                     <p>🪪 {u.cedula} · 📞 {u.telefono}</p>
                   </div>
-                  {!esAdmin && (
+                  {puedeEstado ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {opcionesEstado(u).map(op => (
+                      {(u.email_verificado ? ESTADOS.filter(e => e.value !== 'pendiente') : ESTADOS).map(op => (
                         <button key={op.value} onClick={() => cambiarEstado(u, op.value)}
                           className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 transition ${
                             op.value === u.estado ? op.color + ' ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-500'
@@ -460,6 +504,12 @@ const UsuariosPage = () => {
                           {op.label}
                         </button>
                       ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700">
+                        {u.email === SUPER_ADMIN_EMAIL ? 'Super Admin · siempre activo' : 'Admin · estado protegido'}
+                      </span>
                     </div>
                   )}
                 </div>
