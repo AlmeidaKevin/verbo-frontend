@@ -548,9 +548,14 @@ const UsuariosPage = () => {
                 <input
                   type="text"
                   className={inputClass('nombre_completo')}
-                  placeholder="Nombre y apellido"
+                  placeholder="NOMBRE Y APELLIDO"
                   maxLength={120}
+                  onInput={e => { e.target.value = e.target.value.toUpperCase(); }}
                   {...register('nombre_completo', reglasNombre)}
+                  onChange={e => {
+                    e.target.value = e.target.value.toUpperCase();
+                    setValue('nombre_completo', e.target.value, { shouldValidate: false });
+                  }}
                 />
               </Campo>
 
