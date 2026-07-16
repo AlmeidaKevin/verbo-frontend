@@ -32,7 +32,7 @@ const NinosPage = () => {
   const [editando, setEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [modalObservacion, setModalObservacion] = useState(null);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
   useEffect(() => { cargar(); }, []);
 
@@ -197,8 +197,13 @@ const NinosPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
                 <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.nombre_completo ? 'border-red-400' : 'border-gray-300'}`}
-                  placeholder="Nombre y apellido del niño"
-                  {...register('nombre_completo', { required: 'El nombre es requerido', validate: v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras' })} />
+                  placeholder="NOMBRE Y APELLIDO DEL NIÑO"
+                  onInput={e => { e.target.value = e.target.value.toUpperCase(); }}
+                  {...register('nombre_completo', { required: 'El nombre es requerido', validate: v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras' })}
+                  onChange={e => {
+                    e.target.value = e.target.value.toUpperCase();
+                    setValue('nombre_completo', e.target.value, { shouldValidate: false });
+                  }} />
                 {errors.nombre_completo && <p className="text-red-500 text-xs mt-1">{errors.nombre_completo.message}</p>}
               </div>
               <div>
