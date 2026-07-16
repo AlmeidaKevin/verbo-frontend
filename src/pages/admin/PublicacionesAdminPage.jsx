@@ -270,4 +270,296 @@ const PublicacionesAdminPage = () => {
         )}
         {!cargando && publicaciones.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center
+            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#EEF4F6' }}>
+              <FiBell size={28} className="text-primary-400" />
+            </div>
+            <p className="text-gray-600 font-semibold">No hay publicaciones aún</p>
+            <p className="text-gray-400 text-sm mt-1">Crea la primera publicación para notificar al equipo</p>
+            <button onClick={() => abrirModal()}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl text-white"
+              style={{ background: '#1F4E5F' }}>
+              <FiPlus size={16} /> Nueva publicación
+            </button>
+          </div>
+        )}
+        {publicaciones.map(p => {
+          const tipoData = TIPOS.find(t => t.value === p.tipo_destinatario);
+          const TipoIcon = tipoData?.icon || FiBell;
+          return (
+            <div key={p.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition group">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center mt-0.5"
+                    style={{ background: '#EEF4F6' }}>
+                    <FiBell size={18} className="text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h3 className="font-bold text-gray-800">{p.titulo}</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
+                        style={{ background: '#EEF4F6', color: '#1F4E5F' }}>
+                        <TipoIcon size={11} />
+                        {tipoData?.label || p.tipo_destinatario}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">{p.contenido}</p>
+                    {p.archivos?.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {p.archivos.map((a, i) => (
+                          <a key={i} href={a.url} target="_blank" rel="noreferrer"
+                            className="text-xs flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1 rounded-lg hover:bg-gray-200 transition">
+                            <FiPaperclip size={11} /> {a.nombre}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400 mt-2">
+                      Publicado por <span className="font-medium text-gray-500">{p.publicado_por?.nombre_completo}</span>
+                      {p.editado_por && (
+                        <> · Editado por <span className="font-medium text-gray-500">{p.editado_por?.nombre_completo}</span></>
+                      )}
+                      {' · '}{new Date(p.created_at).toLocaleString('es-EC')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                  {puedeGestionar(p) && (
+                    <button onClick={() => abrirModal(p)}
+                      className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
+                      <FiEdit2 size={15} />
+                    </button>
+                  )}
+                  {puedeGestionar(p) && (
+                    <button onClick={() => eliminar(p.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <FiTrash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modal */}
+      {modal && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-[99998]">
+              <div>
+                <h2 className="font-bold text-gray-800">{editando ? 'Editar Publicación' : 'Nueva Publicación'}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {editando ? 'Modifica el título y contenido' : 'Notifica a tu equipo'}
+                </p>
+              </div>
+              <button onClick={cerrar} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100">
+                <FiX />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4" noValidate>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                <input
+                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.titulo ? 'border-red-400' : 'border-gray-300'}`}
+                  placeholder="Ej: Reunión de planificación"
+                  {...register('titulo', { required: 'Requerido' })} />
+                {errors.titulo && <p className="text-red-500 text-xs mt-1">{errors.titulo.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contenido *</label>
+                <textarea rows={4}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.contenido ? 'border-red-400' : 'border-gray-300'}`}
+                  placeholder="Escribe el mensaje..."
+                  {...register('contenido', { required: 'Requerido' })} />
+                {errors.contenido && <p className="text-red-500 text-xs mt-1">{errors.contenido.message}</p>}
+              </div>
+
+              {/* Selector de tipo */}
+              {editando ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Enviado a</label>
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                    {(() => {
+                      const t = TIPOS.find(t => t.value === editando.tipo_destinatario);
+                      const Icon = t?.icon || FiBell;
+                      return (
+                        <span className="text-sm text-gray-700 flex items-center gap-2 flex-1">
+                          <Icon size={14} className="text-gray-500 shrink-0" />
+                          {t?.label || editando.tipo_destinatario}
+                        </span>
+                      );
+                    })()}
+                    <span className="text-xs text-gray-400 italic">No se puede cambiar al editar</span>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Enviar a</label>
+
+                  {/* Personal */}
+                  <div className="mb-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 px-1">Personal</p>
+                    <div className="space-y-1.5">
+                      {TIPOS.filter(t => t.grupo === 'Personal').map(t => {
+                        const Icon = t.icon;
+                        return (
+                          <label key={t.value}
+                            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer border transition ${tipoSel === t.value ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                            <input type="radio" name="tipo" value={t.value} checked={tipoSel === t.value}
+                              onChange={() => { setTipoSel(t.value); setDestinatariosSeleccionados([]); }}
+                              className="w-4 h-4 text-primary-600 shrink-0" />
+                            <Icon size={15} className={tipoSel === t.value ? 'text-primary-600' : 'text-gray-400'} />
+                            <span className="text-sm text-gray-700 flex-1">{t.label}</span>
+                            <InfoTooltip texto={t.info} />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Grupos */}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 px-1">Grupos</p>
+                    <div className="space-y-1.5">
+                      {TIPOS.filter(t => t.grupo === 'Grupos').map(t => {
+                        const Icon = t.icon;
+                        return (
+                          <label key={t.value}
+                            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer border transition ${tipoSel === t.value ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                            <input type="radio" name="tipo" value={t.value} checked={tipoSel === t.value}
+                              onChange={() => { setTipoSel(t.value); setDestinatariosSeleccionados([]); }}
+                              className="w-4 h-4 text-primary-600 shrink-0" />
+                            <Icon size={15} className={tipoSel === t.value ? 'text-primary-600' : 'text-gray-400'} />
+                            <span className="text-sm text-gray-700 flex-1">{t.label}</span>
+                            <InfoTooltip texto={t.info} />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {tipoInfo && (
+                    <div className="mt-3 flex items-start gap-2 bg-blue-50 text-blue-700 px-4 py-3 rounded-xl text-xs">
+                      <FiInfo size={14} className="shrink-0 mt-0.5" />
+                      <span>{tipoInfo}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Docentes específicos */}
+              {necesitaDocentes && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar docentes</label>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                    {docentesList.map(u => (
+                      <label key={u.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                        <input type="checkbox" checked={destinatariosSeleccionados.includes(u.id)}
+                          onChange={() => toggleDestinatario(u.id)} className="w-4 h-4 rounded text-primary-600" />
+                        <div>
+                          <p className="text-sm text-gray-800">{u.nombre_completo}</p>
+                          <p className="text-xs text-gray-400">{u.email}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {destinatariosSeleccionados.length > 0 &&
+                    <p className="text-xs text-primary-600 mt-1">{destinatariosSeleccionados.length} seleccionado(s)</p>}
+                </div>
+              )}
+
+              {/* Ayudantes específicos */}
+              {necesitaAyudantes && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar ayudantes</label>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                    {ayudantesList.map(u => (
+                      <label key={u.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                        <input type="checkbox" checked={destinatariosSeleccionados.includes(u.id)}
+                          onChange={() => toggleDestinatario(u.id)} className="w-4 h-4 rounded text-primary-600" />
+                        <div>
+                          <p className="text-sm text-gray-800">{u.nombre_completo}</p>
+                          <p className="text-xs text-gray-400">{u.email}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {destinatariosSeleccionados.length > 0 &&
+                    <p className="text-xs text-primary-600 mt-1">{destinatariosSeleccionados.length} seleccionado(s)</p>}
+                </div>
+              )}
+
+              {/* Grupos específicos */}
+              {necesitaGrupos && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar grupos</label>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                    {grupos.map(g => (
+                      <label key={g.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                        <input type="checkbox" checked={destinatariosSeleccionados.includes(g.id)}
+                          onChange={() => toggleDestinatario(g.id)} className="w-4 h-4 rounded text-primary-600" />
+                        <div>
+                          <p className="text-sm text-gray-800">{g.nombre}</p>
+                          <p className="text-xs text-gray-400">{g.reunion?.nombre} · {g.edad_min}–{g.edad_max} años</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {destinatariosSeleccionados.length > 0 &&
+                    <p className="text-xs text-primary-600 mt-1">{destinatariosSeleccionados.length} grupo(s) seleccionado(s)</p>}
+                </div>
+              )}
+
+              {/* Archivos */}
+              {!editando && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Archivos adjuntos <span className="text-gray-400 font-normal">(máx. 3 de 5MB)</span>
+                  </label>
+                  <label className="flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-primary-400 transition">
+                    <FiPaperclip className="text-gray-400" />
+                    <span className="text-sm text-gray-500">Adjuntar archivos...</span>
+                    <input type="file" multiple className="hidden" onChange={e => {
+                      const files = Array.from(e.target.files);
+                      if (archivos.length + files.length > 3) return toast.error('Máximo 3 archivos');
+                      setArchivos(prev => [...prev, ...files]);
+                    }} />
+                  </label>
+                  {archivos.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {archivos.map((f, i) => (
+                        <span key={i} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">
+                          {f.name}
+                          <button type="button" onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))}
+                            className="ml-1 text-gray-400 hover:text-red-500">
+                            <FiX size={11} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={cerrar}
+                  className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={cargando}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-60">
+                  {editando ? <FiSave size={15} /> : <FiSend size={15} />}
+                  {cargando ? 'Guardando...' : editando ? 'Guardar cambios' : 'Publicar y Enviar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
+export default PublicacionesAdminPage;
