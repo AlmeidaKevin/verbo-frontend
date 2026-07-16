@@ -122,9 +122,13 @@ const PublicacionesAdminPage = () => {
   const [tipoSel, setTipoSel] = useState('todos');
   const [destinatariosSeleccionados, setDestinatariosSeleccionados] = useState([]);
   const [cargando, setCargando] = useState(false);
+  const marcadoRef = useRef(false);
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    return () => { marcadoRef.current = false; };
+  }, []);
 
   const cargar = async () => {
     setCargando(true);
@@ -134,9 +138,17 @@ const PublicacionesAdminPage = () => {
         api.get('/usuarios'),
         api.get('/grupos'),
       ]);
-      setPublicaciones(pRes.data.publicaciones || []);
+      const pubs = pRes.data.publicaciones || [];
+      setPublicaciones(pubs);
       setUsuarios(uRes.data.usuarios?.filter(u => u.activo && u.rol !== 'admin') || []);
       setGrupos(gRes.data.grupos || []);
+
+      // Marcar como vistas las publicaciones que aún no lo estén (de otros admins/super admin)
+      const noVistas = pubs.filter(p => !p.vista).map(p => p.id);
+      if (noVistas.length > 0 && !marcadoRef.current) {
+        marcadoRef.current = true;
+        await api.post('/publicaciones/marcar-vistas', { publicacion_ids: noVistas });
+      }
     } catch { toast.error('Error al cargar'); }
     finally { setCargando(false); }
   };
