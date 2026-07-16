@@ -32,7 +32,7 @@ const NinosPage = () => {
   const [editando, setEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [modalObservacion, setModalObservacion] = useState(null);
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
 
   useEffect(() => { cargar(); }, []);
 
@@ -223,15 +223,46 @@ const NinosPage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número de contacto *</label>
-                <input className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.numero_contacto ? 'border-red-400' : 'border-gray-300'}`}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.numero_contacto ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Ej: 0991234567"
-                  {...register('numero_contacto', { required: 'El número de contacto es requerido', pattern: { value: /^\d+$/, message: 'Solo se permiten números' }, minLength: { value: 7, message: 'Mínimo 7 dígitos' } })} />
+                  maxLength={10}
+                  onKeyDown={e => {
+                    if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key))
+                      e.preventDefault();
+                  }}
+                  {...register('numero_contacto', {
+                    required: 'El número de contacto es requerido',
+                    pattern: { value: /^\d+$/, message: 'Solo se permiten números' },
+                    minLength: { value: 9, message: 'Mínimo 9 dígitos' },
+                    maxLength: { value: 10, message: 'Máximo 10 dígitos' },
+                  })} />
                 {errors.numero_contacto && <p className="text-red-500 text-xs mt-1">{errors.numero_contacto.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Observación <span className="text-gray-400 font-normal">(opcional)</span></label>
-                <textarea rows={3} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Alergias, condiciones especiales, etc." {...register('observacion')} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observación <span className="text-gray-400 font-normal">(opcional, máx. 250 palabras)</span>
+                </label>
+                <textarea rows={3}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.observacion ? 'border-red-400' : 'border-gray-300'}`}
+                  placeholder="Alergias, condiciones especiales, etc."
+                  {...register('observacion', {
+                    validate: v => {
+                      if (!v) return true;
+                      const palabras = v.trim().split(/\s+/).filter(Boolean);
+                      return palabras.length <= 250 || 'Máximo 250 palabras';
+                    },
+                  })} />
+                <div className="flex items-center justify-between mt-1">
+                  {errors.observacion
+                    ? <p className="text-red-500 text-xs">{errors.observacion.message}</p>
+                    : <span />}
+                  <p className="text-xs text-gray-400">
+                    {(watch('observacion') || '').trim().split(/\s+/).filter(Boolean).length}/250 palabras
+                  </p>
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={cerrar} className="flex-1 py-3 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
