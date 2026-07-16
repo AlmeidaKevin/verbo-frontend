@@ -12,6 +12,23 @@ const ROL_CONFIG = {
   ayudante: { label: 'Ayudante / Colaborador', gradient: 'linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%)', badge: 'bg-violet-100 text-violet-800', ring: 'ring-violet-400',  btn: 'bg-violet-700 hover:bg-violet-800' },
 };
 
+// Mismas reglas de validación que UsuariosPage.jsx
+const reglasNombre = {
+  required: 'El nombre completo es requerido',
+  maxLength: { value: 120, message: 'Máximo 120 caracteres' },
+  pattern: {
+    value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/,
+    message: 'Solo se permiten letras y espacios',
+  },
+};
+
+const reglasTelefono = {
+  required: 'El teléfono es requerido',
+  pattern: { value: /^\d+$/, message: 'Solo se permiten números' },
+  minLength: { value: 9, message: 'Mínimo 9 dígitos' },
+  maxLength: { value: 10, message: 'Máximo 10 dígitos' },
+};
+
 const PerfilPage = () => {
   const { usuario, actualizarUsuario } = useAuth();
   const [cargando, setCargando] = useState(false);
@@ -21,7 +38,7 @@ const PerfilPage = () => {
 
   const config = ROL_CONFIG[usuario?.rol] || ROL_CONFIG.admin;
 
-  const { register: regPerfil, handleSubmit: handlePerfil, formState: { errors: errPerfil } } = useForm({
+  const { register: regPerfil, handleSubmit: handlePerfil, setValue: setValuePerfil, formState: { errors: errPerfil } } = useForm({
     defaultValues: { nombre_completo: usuario?.nombre_completo || '', telefono: usuario?.telefono || '' },
   });
 
@@ -158,21 +175,29 @@ const PerfilPage = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
             <input
               className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errPerfil.nombre_completo ? 'border-red-400' : 'border-gray-300'}`}
-              {...regPerfil('nombre_completo', {
-                required: 'Requerido',
-                validate: v => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(v) || 'Solo se permiten letras',
-              })}
+              maxLength={120}
+              onInput={e => { e.target.value = e.target.value.toUpperCase(); }}
+              {...regPerfil('nombre_completo', reglasNombre)}
+              onChange={e => {
+                e.target.value = e.target.value.toUpperCase();
+                setValuePerfil('nombre_completo', e.target.value, { shouldValidate: false });
+              }}
             />
             {errPerfil.nombre_completo && <p className="text-red-500 text-xs mt-1">{errPerfil.nombre_completo.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
             <input
+              type="text"
+              inputMode="numeric"
               className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${errPerfil.telefono ? 'border-red-400' : 'border-gray-300'}`}
-              {...regPerfil('telefono', {
-                required: 'Requerido',
-                validate: v => /^\d+$/.test(v) || 'Solo se permiten números',
-              })}
+              placeholder="0999999999"
+              maxLength={10}
+              onKeyDown={e => {
+                if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key))
+                  e.preventDefault();
+              }}
+              {...regPerfil('telefono', reglasTelefono)}
             />
             {errPerfil.telefono && <p className="text-red-500 text-xs mt-1">{errPerfil.telefono.message}</p>}
           </div>
