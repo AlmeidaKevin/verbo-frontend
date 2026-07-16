@@ -5,6 +5,26 @@ import toast from 'react-hot-toast';
 import supabase from '../../config/supabase';
 import api from '../../services/api';
 
+// Cuenta palabras de un texto (ignora espacios extra)
+const contarPalabras = (texto) => (texto || '').trim().split(/\s+/).filter(Boolean).length;
+
+// Trunca un texto para que no supere `max` palabras, preservando espacios/saltos de línea originales
+const limitarPalabras = (texto, max) => {
+  if (!texto) return texto;
+  const regex = /\s+|\S+/g;
+  let match;
+  let contador = 0;
+  let resultado = '';
+  while ((match = regex.exec(texto)) !== null) {
+    if (/\S/.test(match[0])) {
+      contador++;
+      if (contador > max) break;
+    }
+    resultado += match[0];
+  }
+  return resultado;
+};
+
 const ChecklistPage = () => {
   const [reuniones, setReuniones] = useState([]);
   const [grupos, setGrupos] = useState([]);
@@ -127,6 +147,9 @@ const ChecklistPage = () => {
 
   const guardarComentario = async () => {
     if (!modalComentario) return;
+    if (contarPalabras(modalComentario.comentario) > 250) {
+      return toast.error('El comentario no puede superar las 250 palabras');
+    }
     try {
       const { data } = await api.put(`/asistencias/${modalComentario.id}`, { llego_tarde: modalComentario.tarde, comentario: modalComentario.comentario });
       setAsistencias(prev => prev.map(a => a.id === modalComentario.id ? { ...a, ...data.asistencia } : a));
@@ -136,6 +159,9 @@ const ChecklistPage = () => {
   };
 
   const guardarRegistro = async () => {
+    if (contarPalabras(observacionGeneral) > 500) {
+      return toast.error('La observación general no puede superar las 500 palabras');
+    }
     setGuardando(true);
     try {
       await api.post('/asistencias/guardar', { registro_id: registro.id, observacion_general: observacionGeneral });
@@ -174,6 +200,8 @@ const ChecklistPage = () => {
     if (!nuevoNombre.trim()) return toast.error('Ingresa el nombre del niño');
     if (/\d/.test(nuevoNombre)) return toast.error('El nombre no puede contener números');
     if (masInfo && nuevoContacto && !/^\d+$/.test(nuevoContacto)) return toast.error('El contacto solo puede contener números');
+    if (masInfo && nuevoContacto && nuevoContacto.length < 9) return toast.error('El número de contacto debe tener mínimo 9 dígitos');
+    if (masInfo && contarPalabras(nuevoObservacion) > 250) return toast.error('La observación no puede superar las 250 palabras');
     try {
       const payload = {
         nombre_completo: nuevoNombre.trim(),
@@ -392,9 +420,11 @@ const ChecklistPage = () => {
         </button>
         {mostrarObservacion && (
           <div className="px-4 pb-4">
-            <textarea value={observacionGeneral} onChange={e => setObservacionGeneral(e.target.value)} rows={3}
-              placeholder="Observaciones del grupo, incidencias, etc."
+            <textarea value={observacionGeneral}
+              onChange={e => setObservacionGeneral(limitarPalabras(e.target.value, 500))} rows={3}
+              placeholder="Observaciones del grupo, incidencias, etc. (máx. 500 palabras)"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <p className="text-xs text-gray-400 text-right mt-1">{contarPalabras(observacionGeneral)}/500 palabras</p>
           </div>
         )}
       </div>
@@ -467,9 +497,11 @@ const ChecklistPage = () => {
               <input type="checkbox" checked={modalComentario.tarde} onChange={e => setModalComentario(p => ({ ...p, tarde: e.target.checked }))} className="w-4 h-4 rounded text-primary-600" />
               <span className="text-sm text-gray-700 font-medium">Llegó tarde</span>
             </label>
-            <textarea value={modalComentario.comentario} onChange={e => setModalComentario(p => ({ ...p, comentario: e.target.value }))}
-              placeholder="Comentario o recordatorio..." rows={3}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 mb-4" />
+            <textarea value={modalComentario.comentario}
+              onChange={e => setModalComentario(p => ({ ...p, comentario: limitarPalabras(e.target.value, 250) }))}
+              placeholder="Comentario o recordatorio... (máx. 250 palabras)" rows={3}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 mb-1" />
+            <p className="text-xs text-gray-400 text-right mb-4">{contarPalabras(modalComentario.comentario)}/250 palabras</p>
             <div className="flex gap-2">
               <button onClick={() => setModalComentario(null)} className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
               <button onClick={guardarComentario} className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition">Guardar</button>
@@ -493,8 +525,8 @@ const ChecklistPage = () => {
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
-                <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)}
-                  placeholder="Nombre y apellido del niño"
+                <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value.toUpperCase())}
+                  placeholder="NOMBRE Y APELLIDO DEL NIÑO"
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   onKeyDown={e => e.key === 'Enter' && !masInfo && agregarNuevoNino()} autoFocus />
               </div>
@@ -516,7 +548,16 @@ const ChecklistPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Número de contacto</label>
-                    <input value={nuevoContacto} onChange={e => setNuevoContacto(e.target.value)}
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={nuevoContacto}
+                      onChange={e => setNuevoContacto(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      onKeyDown={e => {
+                        if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key))
+                          e.preventDefault();
+                      }}
+                      maxLength={10}
                       placeholder="Ej: 0991234567"
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
                   </div>
@@ -529,10 +570,12 @@ const ChecklistPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Observación <span className="text-gray-400 font-normal">(opcional)</span></label>
-                    <textarea rows={3} value={nuevoObservacion} onChange={e => setNuevoObservacion(e.target.value)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Observación <span className="text-gray-400 font-normal">(opcional, máx. 250 palabras)</span></label>
+                    <textarea rows={3} value={nuevoObservacion}
+                      onChange={e => setNuevoObservacion(limitarPalabras(e.target.value, 250))}
                       placeholder="Alergias, condiciones especiales, etc."
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                    <p className="text-xs text-gray-400 text-right mt-1">{contarPalabras(nuevoObservacion)}/250 palabras</p>
                   </div>
                 </div>
               )}
