@@ -8,6 +8,9 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+
+const SUPER_ADMIN_EMAIL = 'almeidakevin783@gmail.com';
 
 const TIPOS = [
   {
@@ -75,18 +78,6 @@ const TIPOS = [
   },
 ];
 
-const tipoLabel = (tipo) => {
-  const t = TIPOS.find(t => t.value === tipo);
-  if (!t) return tipo;
-  const Icon = t.icon;
-  return (
-    <span className="flex items-center gap-1.5">
-      <Icon size={12} />
-      {t.label}
-    </span>
-  );
-};
-
 // Tooltip info component
 const InfoTooltip = ({ texto }) => {
   const [pos, setPos] = useState(null);
@@ -119,6 +110,9 @@ const InfoTooltip = ({ texto }) => {
 };
 
 const PublicacionesAdminPage = () => {
+  const { usuario: usuarioActual } = useAuth();
+  const esSuperAdmin = usuarioActual?.email === SUPER_ADMIN_EMAIL;
+
   const [publicaciones, setPublicaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [grupos, setGrupos] = useState([]);
@@ -146,6 +140,8 @@ const PublicacionesAdminPage = () => {
     } catch { toast.error('Error al cargar'); }
     finally { setCargando(false); }
   };
+
+  const puedeEditar = (p) => esSuperAdmin || p.publicado_por?.id === usuarioActual?.id;
 
   const abrirModal = (pub = null) => {
     setEditando(pub);
@@ -238,7 +234,7 @@ const PublicacionesAdminPage = () => {
   const necesitaAyudantes = tipoSel === 'ayudantes_especificos';
   const necesitaGrupos = ['grupo_especifico_con_ninos', 'grupo_especifico_sin_ninos'].includes(tipoSel);
   const docentesList = usuarios.filter(u => u.rol === 'docente');
-  const ayuданtesList = usuarios.filter(u => u.rol === 'ayudante');
+  const ayudantesList = usuarios.filter(u => u.rol === 'ayudante');
 
   return (
     <div className="space-y-6">
@@ -315,15 +311,21 @@ const PublicacionesAdminPage = () => {
                       </div>
                     )}
                     <p className="text-xs text-gray-400 mt-2">
-                      {new Date(p.created_at).toLocaleString('es-EC')}
+                      Publicado por <span className="font-medium text-gray-500">{p.publicado_por?.nombre_completo}</span>
+                      {p.editado_por && (
+                        <> · Editado por <span className="font-medium text-gray-500">{p.editado_por?.nombre_completo}</span></>
+                      )}
+                      {' · '}{new Date(p.created_at).toLocaleString('es-EC')}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
-                  <button onClick={() => abrirModal(p)}
-                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
-                    <FiEdit2 size={15} />
-                  </button>
+                  {puedeEditar(p) && (
+                    <button onClick={() => abrirModal(p)}
+                      className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
+                      <FiEdit2 size={15} />
+                    </button>
+                  )}
                   <button onClick={() => eliminar(p.id)}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
                     <FiTrash2 size={15} />
@@ -467,7 +469,7 @@ const PublicacionesAdminPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar ayudantes</label>
                   <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
-                    {ayuданtesList.map(u => (
+                    {ayudantesList.map(u => (
                       <label key={u.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
                         <input type="checkbox" checked={destinatariosSeleccionados.includes(u.id)}
                           onChange={() => toggleDestinatario(u.id)} className="w-4 h-4 rounded text-primary-600" />
